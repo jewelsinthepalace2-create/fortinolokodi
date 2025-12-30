@@ -146,42 +146,45 @@
     return null;
   }
 
-  document.getElementById('loginBtn').addEventListener('click', async () => {
+ document.getElementById('loginBtn').addEventListener('click', async () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
-    if(!email || !password) {
-        statusEl.textContent = "Please enter credentials";
-        return;
-    }
-
-    statusEl.style.color = "white";
-    statusEl.textContent = "Authenticating...";
-    
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      statusEl.textContent = "Checking permissions...";
-      
-      const role = await findUserRole(cred.user.uid);
-      
-      const routes = {
-        "master_admin": "admin/index.html",
-        "pastor": "pastor/index.html",
-        "shepherd": "shepherd/index.html",
-        "member": "list/index.html"
-      };
+        // TEST 1: Authentication
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        const myUID = cred.user.uid;
+        alert("Step 1 Success! Your UID is: " + myUID);
 
-      if (role && routes[role]) {
-        window.location.href = routes[role];
-      } else {
-        statusEl.style.color = "#ff4b2b";
-        statusEl.textContent = "User found, but role is missing in Firestore.";
-      }
+        // TEST 2: Searching Firestore
+        const role = await findUserRole(myUID);
+        
+        if (!role) {
+            alert("Step 2 Failed: I found no document named " + myUID + " in pastors, shepherds, or members.");
+            return;
+        }
+
+        alert("Step 2 Success! Your role is: " + role);
+
+        // TEST 3: Redirecting
+        const routes = {
+            "master_admin": "admin/index.html",
+            "pastor": "pastor/index.html",
+            "shepherd": "shepherd/index.html",
+            "member": "list/index.html"
+        };
+
+        if (routes[role]) {
+            alert("Step 3: Redirecting to " + routes[role]);
+            window.location.href = routes[role];
+        } else {
+            alert("Step 3 Failed: The role '" + role + "' does not match any route.");
+        }
+
     } catch (err) {
-      statusEl.style.color = "#ff4b2b";
-      statusEl.textContent = "Error: " + err.message;
+        alert("Auth Error: " + err.message);
     }
-  });
+});
 </script>
 </body>
 </html>
