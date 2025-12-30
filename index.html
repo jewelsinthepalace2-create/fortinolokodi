@@ -107,65 +107,81 @@
     <p id="status" class="status-msg"></p>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+  // We change getFirestore to initializeFirestore to allow custom settings
+  import { initializeFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
-      authDomain: "fob-database-139d1.firebaseapp.com",
-      projectId: "fob-database-139d1",
-      storageBucket: "fob-database-139d1.firebasestorage.app",
-      messagingSenderId: "375165731354",
-      appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
+    authDomain: "fob-database-139d1.firebaseapp.com",
+    projectId: "fob-database-139d1",
+    storageBucket: "fob-database-139d1.firebasestorage.app",
+    messagingSenderId: "375165731354",
+    appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-    const statusEl = document.getElementById('status');
+  // FIX: Force Long Polling to bypass "Client is Offline" errors
+  const db = initializeFirestore(app, {
+    experimentalForceLongPolling: true,
+  });
 
-    async function findUserRole(uid) {
-      const collections = ['pastors', 'shepherds', 'members'];
-      for (const col of collections) {
+  const statusEl = document.getElementById('status');
+
+  async function findUserRole(uid) {
+    const collections = ['pastors', 'shepherds', 'members'];
+    // Try to find the UID in any of the three collections
+    for (const col of collections) {
+      try {
         const snap = await getDoc(doc(db, col, uid));
         if (snap.exists()) return snap.data().role;
+      } catch (e) {
+        console.error("Error fetching from " + col, e);
       }
-      return null;
+    }
+    return null;
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if(!email || !password) {
+        statusEl.textContent = "Please enter credentials";
+        return;
     }
 
-    document.getElementById('loginBtn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+    statusEl.style.color = "white";
+    statusEl.textContent = "Authenticating...";
+    
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      statusEl.textContent = "Checking permissions...";
       
-      statusEl.textContent = "Authenticating...";
+      const role = await findUserRole(cred.user.uid);
       
-      try {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-        statusEl.textContent = "Checking permissions...";
-        
-        const role = await findUserRole(cred.user.uid);
-        
-        const routes = {
-          "master_admin": "/admin/index.html",
-          "pastor": "/pastor/index.html",
-          "shepherd": "/shepherd/index.html",
-          "member": "/list/index.html"
-        };
+      const routes = {
+        "master_admin": "admin/index.html",
+        "pastor": "pastor/index.html",
+        "shepherd": "shepherd/index.html",
+        "member": "list/index.html"
+      };
 
-        if (role && routes[role]) {
-          window.location.href = routes[role];
-        } else {
-          statusEl.style.color = "#ff4b2b";
-          statusEl.textContent = "Role not assigned. Contact Admin.";
-        }
-      } catch (err) {
+      if (role && routes[role]) {
+        window.location.href = routes[role];
+      } else {
         statusEl.style.color = "#ff4b2b";
-        statusEl.textContent = "Error: " + err.message;
+        statusEl.textContent = "User found, but role is missing in Firestore.";
       }
-    });
-  </script>
+    } catch (err) {
+      statusEl.style.color = "#ff4b2b";
+      statusEl.textContent = "Error: " + err.message;
+    }
+  });
+</script>
 </body>
 </html>
