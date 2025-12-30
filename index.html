@@ -110,7 +110,6 @@
  <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  // We change getFirestore to initializeFirestore to allow custom settings
   import { initializeFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -122,54 +121,52 @@
     appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
-  // FIX: Force Long Polling to bypass "Client is Offline" errors
+  // FIX: Using initializeFirestore with Long Polling to bypass "Offline" errors
   const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
+    experimentalForceLongPolling: true, 
   });
 
   const statusEl = document.getElementById('status');
 
-async function findUserRole(uid) {
-  const collections = ['pastors', 'shepherds', 'members'];
-  
-  for (const col of collections) {
-    console.log(`🔎 Searching in collection: "${col}"...`);
+  async function findUserRole(uid) {
+    const collections = ['pastors', 'shepherds', 'members'];
     
-    // Create the reference to the document
-    const docRef = doc(db, col, uid);
-    const snap = await getDoc(docRef);
-    
-    if (snap.exists()) {
-      // snap.id is the actual "Name" of the document found
-      console.log(`✅ MATCH FOUND!`);
-      console.log(`📂 Collection: ${col}`);
-      console.log(`🆔 Document Name (ID): ${snap.id}`); 
-      console.log(`📄 Content inside document:`, snap.data());
-      
-      const roleFound = snap.data().role;
-      
-      if (roleFound) {
-        return roleFound;
-      } else {
-        console.error("❌ The document exists, but the 'role' field is MISSING inside it.");
-        return null;
+    for (const col of collections) {
+      console.log(`🔎 Searching in collection: "${col}"...`);
+      try {
+        const docRef = doc(db, col, uid);
+        const snap = await getDoc(docRef);
+        
+        if (snap.exists()) {
+          console.log(`✅ MATCH FOUND!`);
+          console.log(`📂 Collection: ${col}`);
+          console.log(`🆔 Document Name (ID): ${snap.id}`); 
+          console.log(`📄 Content inside document:`, snap.data());
+          
+          return snap.data().role;
+        } else {
+          console.log(`❌ No document named "${uid}" found in "${col}".`);
+        }
+      } catch (e) {
+        console.error(`Error checking ${col}:`, e);
       }
-    } else {
-      console.log(`❌ No document named "${uid}" found in "${col}".`);
     }
+    return null;
   }
-  
-  console.warn("🚫 Search complete: UID was not found in any folder.");
-  return null;
-}
 
- document.getElementById('loginBtn').addEventListener('click', async () => {
+  document.getElementById('loginBtn').addEventListener('click', async () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
+    if(!email || !password) {
+        alert("Please enter email and password");
+        return;
+    }
+
     try {
         // TEST 1: Authentication
         const cred = await signInWithEmailAndPassword(auth, email, password);
@@ -203,8 +200,9 @@ async function findUserRole(uid) {
 
     } catch (err) {
         alert("Auth Error: " + err.message);
+        console.error(err);
     }
-});
+  });
 </script>
 </body>
 </html>
