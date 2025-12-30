@@ -3,15 +3,6 @@
 <head>
   <meta charset="UTF-8" />
   <title>ShepherdNet Login</title>
-
-  <!-- Clerk SDK -->
-  <script
-    async
-    crossorigin="anonymous"
-    data-clerk-publishable-key="pk_test_YnJpZWYtc2hhcmstODYuY2xlcmsuYWNjb3VudHMuZGV2JA"
-    src="https://js.clerk.dev/v4/clerk.browser.js">
-  </script>
-
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -25,67 +16,94 @@
     #app {
       width: 100%;
       max-width: 420px;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+    input { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0056b3; }
   </style>
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <h2>ShepherdNet Login</h2>
+    <input type="email" id="email" placeholder="Email Address">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+  </div>
 
-  <script>
-    async function redirectByRole() {
-      const token = await Clerk.session.getToken()
+  <script type="module">
+    // 1. Firebase Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
-      const res = await fetch(
-        "https://shepherdnet-api.jewelsinthepalace2.workers.dev/api/me",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      )
+    // 2. Your Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
+      authDomain: "fob-database-139d1.firebaseapp.com",
+      projectId: "fob-database-139d1",
+      storageBucket: "fob-database-139d1.firebasestorage.app",
+      messagingSenderId: "375165731354",
+      appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 3. The Role Redirect Logic
+    async function redirectByRole(user) {
+      const token = await user.getIdToken();
+
+      // Fetch role from your Cloudflare Worker API
+      const res = await fetch("https://shepherdnet-api.jewelsinthepalace2.workers.dev/api/me", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       if (!res.ok) {
-        alert("Authorization failed")
-        return
+        alert("Authorization failed. Check if user exists in database.");
+        return;
       }
 
-      const user = await res.json()
+      const userData = await res.json();
+      
+      const routes = {
+        "master_admin": "/admin/index.html",
+        "chapel_leader": "/chapel/index.html",
+        "pastor": "/pastor/index.html",
+        "shepherd": "/shepherd/index.html",
+        "member": "/list/index.html"
+      };
 
-      switch (user.role) {
-        case "master_admin":
-          window.location.href = "/admin/index.html"
-          break
-        case "chapel_leader":
-          window.location.href = "/chapel/index.html"
-          break
-        case "pastor":
-          window.location.href = "/pastor/index.html"
-          break
-        case "shepherd":
-          window.location.href = "/shepherd/index.html"
-          break
-        case "member":
-          window.location.href = "/list/index.html"
-          break
-        default:
-          alert("Role not assigned. Contact admin.")
+      if (routes[userData.role]) {
+        window.location.href = routes[userData.role];
+      } else {
+        alert("Role not assigned. Contact admin.");
       }
     }
 
-    window.addEventListener("load", async () => {
-      await Clerk.load()
-      const app = document.getElementById("app")
+    // 4. Handle Button Click
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
 
-      if (!Clerk.user) {
-        // Not logged in → show Clerk sign in
-        Clerk.mountSignIn(app)
-        return
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          redirectByRole(userCredential.user);
+        })
+        .catch((error) => {
+          alert("Login failed: " + error.message);
+        });
+    });
+
+    // 5. Auto-redirect if already logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        redirectByRole(user);
       }
-
-      // Logged in → redirect automatically
-      redirectByRole()
-    })
+    });
   </script>
 </body>
 </html>
