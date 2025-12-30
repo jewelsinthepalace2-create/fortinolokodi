@@ -132,20 +132,37 @@
 
   const statusEl = document.getElementById('status');
 
- async function findUserRole(uid) {
+async function findUserRole(uid) {
   const collections = ['pastors', 'shepherds', 'members'];
   
   for (const col of collections) {
-    console.log("Checking collection:", col, "for UID:", uid); // LOG 1
-    const snap = await getDoc(doc(db, col, uid));
+    console.log(`🔎 Searching in collection: "${col}"...`);
+    
+    // Create the reference to the document
+    const docRef = doc(db, col, uid);
+    const snap = await getDoc(docRef);
     
     if (snap.exists()) {
-      console.log("Found document! Data is:", snap.data()); // LOG 2
-      return snap.data().role;
+      // snap.id is the actual "Name" of the document found
+      console.log(`✅ MATCH FOUND!`);
+      console.log(`📂 Collection: ${col}`);
+      console.log(`🆔 Document Name (ID): ${snap.id}`); 
+      console.log(`📄 Content inside document:`, snap.data());
+      
+      const roleFound = snap.data().role;
+      
+      if (roleFound) {
+        return roleFound;
+      } else {
+        console.error("❌ The document exists, but the 'role' field is MISSING inside it.");
+        return null;
+      }
     } else {
-      console.log("Not found in:", col); // LOG 3
+      console.log(`❌ No document named "${uid}" found in "${col}".`);
     }
   }
+  
+  console.warn("🚫 Search complete: UID was not found in any folder.");
   return null;
 }
 
