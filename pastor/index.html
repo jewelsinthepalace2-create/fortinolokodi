@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastor Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style> /* (USE SAME CSS AS ADMIN ABOVE) */ </style>
+</head>
+<body>
+    <nav>
+        <h2>PASTOR</h2>
+        <a href="#" class="active">My Chapel</a>
+        <a href="../list/index.html">My Members</a>
+        <a href="#" id="logoutBtn">Sign Out</a>
+    </nav>
+    <main>
+        <h1 id="welcome">Loading...</h1>
+        <div class="stat-grid">
+            <div class="card"><h3>My Shepherds</h3><p id="s-count">0</p></div>
+            <div class="card"><h3>My Members</h3><p id="m-count">0</p></div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getCountFromServer } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", authDomain: "fob-database-139d1.firebaseapp.com", projectId: "fob-database-139d1", storageBucket: "fob-database-139d1.firebasestorage.app", messagingSenderId: "375165731354", appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('welcome').innerText = "Chapel Dashboard";
+                // Only count where pastor_id matches this user's ID
+                const sQuery = query(collection(db, "shepherds"), where("pastor_id", "==", user.uid));
+                const mQuery = query(collection(db, "members"), where("pastor_id", "==", user.uid));
+                
+                const sCount = await getCountFromServer(sQuery);
+                const mCount = await getCountFromServer(mQuery);
+                
+                document.getElementById('s-count').innerText = sCount.data().count;
+                document.getElementById('m-count').innerText = mCount.data().count;
+            }
+        });
+        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => window.location.href="../index.html");
+    </script>
+</body>
+</html>
