@@ -51,7 +51,12 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getFirestore, collection, getCountFromServer } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
     
-    const firebaseConfig = { /* USE YOUR KEYS HERE */ };
+    const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
+      authDomain: "fob-database-139d1.firebaseapp.com",
+      projectId: "fob-database-139d1",
+      storageBucket: "fob-database-139d1.firebasestorage.app",
+      messagingSenderId: "375165731354",
+      appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
