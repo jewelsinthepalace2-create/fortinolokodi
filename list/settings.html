@@ -146,10 +146,10 @@
   document.getElementById('backBtn').onclick = async () => {
     const uid = auth.currentUser.uid;
     const adminSnap = await getDoc(doc(db, "master_admin", uid));
-    if (adminSnap.exists()) { window.location.href = "../dashboard/admin.html"; return; }
+    if (adminSnap.exists()) { window.location.href = "../admin/index.html"; return; }
     const pastorSnap = await getDoc(doc(db, "pastors", uid));
-    if (pastorSnap.exists()) { window.location.href = "../dashboard/pastor.html"; return; }
-    window.location.href = "../dashboard/shepherd.html";
+    if (pastorSnap.exists()) { window.location.href = "../pastor/index.html"; return; }
+    window.location.href = "../shepherd/index.html";
   };
 
   // Save All Changes
