@@ -107,7 +107,8 @@
   async function loadAdminView() {
     const grid = document.getElementById('grid');
     // Admin pulls all members ordered by name
-    const q = query(collection(db, "members"), orderBy("full_name"));
+    // Change this line inside loadAdminView:
+    const q = query(collection(db, "members"), orderBy("last_name"));
     const snaps = await getDocs(q);
     
     grid.innerHTML = "";
