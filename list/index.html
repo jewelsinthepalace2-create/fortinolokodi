@@ -2,144 +2,131 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Flock | ShepherdNet</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     :root { 
-        /* Dark Mode (Default) */
         --primary: #4facfe; 
         --bg: #0f172a;
         --glass: rgba(255, 255, 255, 0.05); 
         --border: rgba(255, 255, 255, 0.1); 
         --text: #ffffff;
         --text-dim: rgba(255, 255, 255, 0.5);
-        --header-bg: rgba(15, 23, 42, 0.9);
+        --sidebar-width: 280px;
+        --sidebar-collapsed: 80px;
     }
 
     [data-theme="light"] {
-        /* Light Mode */
         --bg: #f1f5f9;
         --glass: #ffffff;
         --border: #e2e8f0;
         --text: #0f172a;
         --text-dim: #64748b;
-        --header-bg: rgba(255, 255, 255, 0.9);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; min-height: 100vh; transition: 0.3s; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; display: flex; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
 
-    /* Global Header Styling */
-    .global-header {
-        width: 100%;
-        padding: 15px 25px;
-        background: var(--header-bg);
-        backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-    }
-
-    .user-pill {
-        background: rgba(79, 172, 254, 0.1);
-        border: 1px solid rgba(79, 172, 254, 0.3);
-        padding: 8px 15px;
-        border-radius: 20px;
-        color: var(--primary);
-        text-decoration: none;
-        font-size: 0.85rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: 0.3s;
-    }
-
-    /* List Layout */
-    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-    h2 { font-size: 1.2rem; margin-bottom: 20px; font-weight: 400; color: var(--text-dim); }
-
-    .list-container { display: flex; flex-direction: column; gap: 8px; }
-
-    /* NEW: Long Horizontal Tab Style */
-    .member-tab { 
+    /* --- SIDEBAR SYSTEM --- */
+    nav { 
+        width: var(--sidebar-width); 
         background: var(--glass); 
-        padding: 12px 20px; 
-        border-radius: 12px; 
-        border: 1px solid var(--border); 
-        cursor: pointer; 
+        backdrop-filter: blur(15px); 
+        border-right: 1px solid var(--border); 
+        padding: 40px 20px; 
         display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        transition: 0.2s;
+        flex-direction: column; 
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: sticky; top: 0; height: 100vh; z-index: 1000;
+    }
+
+    body.sidebar-hidden nav { width: var(--sidebar-collapsed); padding: 40px 15px; }
+    body.sidebar-hidden nav a span:last-child { display: none; }
+
+    .menu-toggle {
+        position: absolute; right: -15px; top: 30px; width: 30px; height: 30px;
+        background: var(--primary); border-radius: 50%; display: flex;
+        align-items: center; justify-content: center; cursor: pointer; color: #0f172a;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1100; transition: 0.3s;
+    }
+    body.sidebar-hidden .menu-toggle { transform: rotate(180deg); }
+
+    nav a { 
+        display: flex; align-items: center; gap: 15px; color: var(--text); 
+        text-decoration: none; padding: 12px 15px; border-radius: 12px; 
+        opacity: 0.7; transition: 0.3s; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap;
+    }
+    nav a:hover, nav a.active { opacity: 1; color: var(--primary); background: var(--glass); }
+
+    /* --- LIST CONTENT --- */
+    main { flex: 1; padding: 40px; max-width: 900px; margin: 0 auto; }
+    h2 { font-size: 1.5rem; margin-bottom: 30px; font-weight: 600; color: var(--primary); }
+
+    .list-container { display: flex; flex-direction: column; gap: 10px; }
+
+    .member-tab { 
+        background: var(--glass); padding: 16px 24px; border-radius: 16px; 
+        border: 1px solid var(--border); cursor: pointer; display: flex; 
+        justify-content: space-between; align-items: center; transition: 0.3s;
         backdrop-filter: blur(5px);
     }
-    .member-tab:hover { 
-        border-color: var(--primary); 
-        transform: translateX(5px); 
-        background: rgba(79, 172, 254, 0.05);
-    }
+    .member-tab:hover { border-color: var(--primary); transform: translateX(8px); background: rgba(79, 172, 254, 0.08); }
 
     .member-info { display: flex; align-items: center; gap: 15px; }
-    .member-name { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .member-name { font-size: 1rem; font-weight: 600; color: var(--text); }
     .status-tag { 
-        font-size: 0.65rem; 
-        padding: 3px 10px; 
-        border-radius: 6px; 
-        background: rgba(79, 172, 254, 0.1); 
-        color: var(--primary);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
+        font-size: 0.6rem; padding: 4px 12px; border-radius: 20px; 
+        background: rgba(79, 172, 254, 0.15); color: var(--primary);
+        text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;
     }
-
-    .chevron { color: var(--text-dim); opacity: 0.5; font-size: 1.2rem; }
 
     .group-header { 
-        grid-column: 1/-1; 
-        margin: 25px 0 10px 0; 
-        border-left: 3px solid var(--primary); 
-        padding-left: 12px; 
-        color: var(--primary); 
-        font-size: 0.8rem; 
-        text-transform: uppercase; 
-        letter-spacing: 1px;
-        font-weight: 600;
+        margin: 30px 0 15px 0; border-left: 4px solid var(--primary); 
+        padding-left: 15px; color: var(--text-dim); font-size: 0.75rem; 
+        text-transform: uppercase; letter-spacing: 2px; font-weight: 600;
     }
 
-    .add-btn { 
-        position: fixed; bottom: 30px; right: 30px; 
-        background: var(--primary); color: #0f172a; 
-        width: 56px; height: 56px; border-radius: 50%; 
-        display: flex; justify-content: center; align-items: center; 
-        font-size: 28px; text-decoration: none; 
-        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
-        transition: 0.3s;
-        z-index: 100;
+    /* Mobile Logic */
+    @media (max-width: 768px) {
+        nav { position: fixed; left: 0; transform: translateX(-100%); }
+        body.mobile-nav-open nav { transform: translateX(0); width: 280px; }
+        .mobile-trigger {
+            display: block !important; position: fixed; bottom: 30px; right: 30px;
+            background: var(--primary); padding: 15px; border-radius: 50%;
+            z-index: 2000; box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+        main { padding: 80px 20px; }
     }
-    .add-btn:hover { transform: scale(1.1) rotate(90deg); }
-
+    .mobile-trigger { display: none; cursor: pointer; }
   </style>
 </head>
-<body>
+<body class="sidebar-hidden">
 
-<header class="global-header">
-    <div style="font-weight: 600; letter-spacing: 1px; color: var(--primary);">SHEPHERDNET</div>
-    <a href="../list/settings.html" class="user-pill">
-        <span>⚙️</span> Settings</a>
-</header>
+  <div class="mobile-trigger" id="mobileBtn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  </div>
 
-<div class="container">
+  <nav id="sidebar">
+    <div class="menu-toggle" id="toggleBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </div>
+
+    <div style="margin-bottom: 40px; padding: 10px; font-weight: 800; color: var(--primary); letter-spacing: 1px;">S-NET</div>
+
+    <a href="javascript:history.back()"><span>🏠</span> <span>Dashboard</span></a>
+    <a href="#" class="active"><span>📋</span> <span>Member List</span></a>
+    <a href="../list/settings.html"><span>⚙️</span> <span>Settings</span></a>
+
+    <div style="flex-grow: 1;"></div>
+    <a href="../dashboard/add-member.html" style="background: var(--primary); color: #0f172a; opacity: 1; font-weight: 600;"><span>➕</span> <span>New Member</span></a>
+  </nav>
+
+  <main>
     <h2 id="headerTitle">Loading Registry...</h2>
     <div id="list" class="list-container"></div>
-</div>
-
-<a href="../dashboard/add-member.html" class="add-btn">+</a>
+  </main>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -151,7 +138,6 @@
     authDomain: "fob-database-139d1.firebaseapp.com",
     projectId: "fob-database-139d1",
     storageBucket: "fob-database-139d1.firebasestorage.app",
-    messagingSenderId: "375165731354",
     appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
   };
 
@@ -159,41 +145,43 @@
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
 
-  // Sync Theme
+  // --- UI TOGGLES ---
+  const toggleBtn = document.getElementById('toggleBtn');
+  const mobileBtn = document.getElementById('mobileBtn');
+  const sidebar = document.getElementById('sidebar');
+
+  toggleBtn.onclick = () => document.body.classList.toggle('sidebar-hidden');
+  mobileBtn.onclick = () => document.body.classList.toggle('mobile-nav-open');
+
+  // Theme Sync
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
 
   async function startApp(user) {
     const headerTitle = document.getElementById('headerTitle');
     
-    // Role Hierarchy check
-    const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
+    const [adminSnap, pastorSnap, shepSnap] = await Promise.all([
+        getDoc(doc(db, "master_admin", user.uid)),
+        getDoc(doc(db, "pastors", user.uid)),
+        getDoc(doc(db, "shepherds", user.uid))
+    ]);
+
     if (adminSnap.exists()) {
-      headerTitle.textContent = "Global Member Registry";
+      headerTitle.textContent = "Global Registry";
       loadAdminView();
-      return;
-    }
-
-    const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
-    if (pastorSnap.exists()) {
-      headerTitle.textContent = "Chapel Management";
+    } else if (pastorSnap.exists()) {
+      headerTitle.textContent = "Branch Registry";
       loadPastorView(user.uid);
-      return;
-    }
-
-    const shepSnap = await getDoc(doc(db, "shepherds", user.uid));
-    if (shepSnap.exists()) {
+    } else if (shepSnap.exists()) {
       headerTitle.textContent = "My Assigned Souls";
       loadShepherdView(user.uid);
     }
   }
 
   async function loadAdminView() {
-    const list = document.getElementById('list');
     const q = query(collection(db, "members"), orderBy("last_name"));
     const snaps = await getDocs(q);
-    list.innerHTML = "";
-    snaps.forEach(m => renderMemberTab(list, { id: m.id, ...m.data() }));
+    renderList(snaps);
   }
 
   async function loadPastorView(pastorId) {
@@ -210,34 +198,33 @@
     let directMembers = [];
     memSnaps.forEach(m => {
       const data = { id: m.id, ...m.data() };
-      if (data.shepherdId && shepherdMap[data.shepherdId]) {
-        shepherdMap[data.shepherdId].members.push(data);
-      } else {
-        directMembers.push(data);
-      }
+      if (data.shepherdId && shepherdMap[data.shepherdId]) shepherdMap[data.shepherdId].members.push(data);
+      else directMembers.push(data);
     });
-    renderGrouped(directMembers, shepherdMap);
+
+    list.innerHTML = "";
+    if (directMembers.length > 0) {
+      renderHeader(list, "Direct Care");
+      directMembers.forEach(m => renderMemberTab(list, m));
+    }
+    for (const id in shepherdMap) {
+      if (shepherdMap[id].members.length > 0) {
+          renderHeader(list, `Shepherd: ${shepherdMap[id].name}`);
+          shepherdMap[id].members.forEach(m => renderMemberTab(list, m));
+      }
+    }
   }
 
   async function loadShepherdView(shepherdId) {
-    const list = document.getElementById('list');
     const q = query(collection(db, "members"), where("shepherdId", "==", shepherdId));
     const snaps = await getDocs(q);
-    list.innerHTML = "";
-    snaps.forEach(m => renderMemberTab(list, { id: m.id, ...m.data() }));
+    renderList(snaps);
   }
 
-  function renderGrouped(direct, shepMap) {
+  function renderList(snaps) {
     const list = document.getElementById('list');
     list.innerHTML = "";
-    if (direct.length > 0) {
-      renderHeader(list, "Directly Under Pastor");
-      direct.forEach(m => renderMemberTab(list, m));
-    }
-    for (const id in shepMap) {
-      renderHeader(list, `Shepherd: ${shepMap[id].name}`);
-      shepMap[id].members.forEach(m => renderMemberTab(list, m));
-    }
+    snaps.forEach(m => renderMemberTab(list, { id: m.id, ...m.data() }));
   }
 
   function renderHeader(container, text) {
@@ -252,16 +239,14 @@
     tab.className = 'member-tab';
     tab.onclick = () => window.location.href = `profile.html?id=${member.id}`;
     
-    const firstName = member.first_name || "";
-    const lastName = member.last_name || "";
-    const displayName = `${firstName} ${lastName}`.trim() || "Unknown Member";
+    const name = `${member.first_name || ""} ${member.last_name || ""}`.trim() || "New Soul";
 
     tab.innerHTML = `
         <div class="member-info">
-          <div class="member-name">${displayName}</div>
-          <span class="status-tag">${member.status || 'No Status'}</span>
+          <div class="member-name">${name}</div>
+          <span class="status-tag">${member.status || 'Active'}</span>
         </div>
-        <div class="chevron">›</div>`;
+        <div style="color: var(--primary); font-weight: bold;">›</div>`;
     container.appendChild(tab);
   }
 
