@@ -102,6 +102,8 @@
   <p id="roleDisplay">Identifying Account Role...</p>
 
   <div class="form-group">
+    <div class="section-label">Member Photo</div>
+<input type="file" id="mPhotoFile" accept="image/*" style="padding: 10px;">
     <div class="section-label">Identity</div>
     <input type="text" id="mSurname" placeholder="Surname (Last Name)" required>
     <div class="row">
@@ -135,6 +137,8 @@
         <option value="Level 200">Level 200</option>
         <option value="Level 300">Level 300</option>
         <option value="Level 400">Level 400</option>
+        <option value="Level 500">Level 500</option>
+        <option value="Level 600">Level 600</option>
         <option value="Alumnus">Alumnus</option>
         <option value="Non-Student">Non-Student</option>
     </select>
@@ -161,6 +165,8 @@
   import { 
     getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs 
   } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  // Added Storage imports
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 
   const firebaseConfig = { 
     apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
@@ -173,8 +179,8 @@
   
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  // This MUST match the database ID used in your Admin Panel
   const db = getFirestore(app, "fobrealdbase");
+  const storage = getStorage(app); // Initialize Storage
 
   let pId = null;
   let sId = null;
@@ -183,16 +189,10 @@
     if (user) {
       const roleDisplay = document.getElementById('roleDisplay');
       const saveBtn = document.getElementById('saveBtn');
-
       try {
-        // Speed up: Run both checks at the same time
         const shepherdRef = doc(db, "shepherds", user.uid);
         const pastorRef = doc(db, "pastors", user.uid);
-        
-        const [shepSnap, pastSnap] = await Promise.all([
-          getDoc(shepherdRef),
-          getDoc(pastorRef)
-        ]);
+        const [shepSnap, pastSnap] = await Promise.all([getDoc(shepherdRef), getDoc(pastorRef)]);
 
         if (shepSnap.exists()) {
           sId = user.uid;
@@ -203,57 +203,50 @@
           sId = "direct_pastor_entry";
           roleDisplay.innerText = `Logged in as Pastor: ${pastSnap.data().full_name}`;
         } else {
-          roleDisplay.innerText = "Error: Role not found. Contact Admin.";
-          return; // Stop here if role is unknown
+          roleDisplay.innerText = "Error: Role not found.";
+          return;
         }
-        
         saveBtn.disabled = false;
         saveBtn.innerText = "Save Member Data";
-
       } catch (err) {
-        console.error("Role Check Error:", err);
-        roleDisplay.innerText = "Connection Error. Please check your internet.";
+        roleDisplay.innerText = "Connection Error.";
       }
     } else {
       window.location.href = "login.html";
     }
   });
 
-  // Attach Age logic to window so HTML onchange can see it
-  window.calculateAge = () => {
-    const dob = document.getElementById('mBirthday').value;
-    if(!dob) return;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
-    document.getElementById('ageDisplay').innerText = `Calculated Age: ${age} years`;
-  };
-
   document.getElementById('saveBtn').addEventListener('click', async () => {
     const phone = document.getElementById('mPhone').value.trim();
+    const photoFile = document.getElementById('mPhotoFile').files[0];
     if(!phone) { alert("Phone number is required"); return; }
     
     const btn = document.getElementById('saveBtn');
     btn.disabled = true; 
-    btn.textContent = "Checking for duplicates...";
+    btn.textContent = "Processing...";
     
     try {
-      // Duplicate Check
+      // 1. Duplicate Check
       const q = query(collection(db, "members"), where("phone", "==", phone));
       const querySnapshot = await getDocs(q);
-      
       if (!querySnapshot.empty) {
-          alert("This member is already in the system (Duplicate Phone)!");
+          alert("Duplicate Phone Number!");
           btn.disabled = false;
-          btn.textContent = "Save Member Data";
           return;
       }
 
+      // 2. Handle Photo Upload (If selected)
+      let photoUrl = null;
+      if (photoFile) {
+        btn.textContent = "Uploading Photo...";
+        const storageRef = ref(storage, `member_photos/${phone}_${Date.now()}`);
+        await uploadBytes(storageRef, photoFile);
+        photoUrl = await getDownloadURL(storageRef);
+      }
+
+      // 3. Save to Firestore
       btn.textContent = "Saving to Cloud...";
       const birthDate = document.getElementById('mBirthday').value;
-      const birthMonthDay = birthDate ? birthDate.substring(5) : null;
 
       await addDoc(collection(db, "members"), {
         last_name: document.getElementById('mSurname').value,
@@ -261,13 +254,15 @@
         other_names: document.getElementById('mOthername').value,
         gender: document.getElementById('mGender').value,
         dob: birthDate,
-        dob_day_month: birthMonthDay,
+        dob_day_month: birthDate ? birthDate.substring(5) : null,
         phone: phone,
+        hostel: document.getElementById('mHostel').value, // FIXED: Hostel now included
         level: document.getElementById('mLevel').value,
         course: document.getElementById('mCourse').value,
         status: document.getElementById('mStatus').value,
         emergency_name: document.getElementById('mEmergencyName').value,
         emergency_phone: document.getElementById('mEmergencyPhone').value,
+        photo_url: photoUrl, // NEW: Photo URL included
         recorded_by_id: auth.currentUser.uid,
         pastorId: pId,
         shepherdId: sId,
@@ -277,7 +272,7 @@
       alert("Member added successfully!");
       window.location.reload();
     } catch (e) {
-      alert("Error saving: " + e.message);
+      alert("Error: " + e.message);
       btn.disabled = false;
       btn.innerText = "Try Again";
     }
