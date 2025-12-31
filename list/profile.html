@@ -6,26 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #4facfe; --accent: #00f2fe; --glass: rgba(255, 255, 255, 0.05); }
+    :root { --primary: #4facfe; --accent: #00f2fe; --danger: #ff4d4d; --glass: rgba(255, 255, 255, 0.05); }
     body { background: #0f172a; color: white; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; padding: 20px; min-height: 100vh; }
     
     .profile-card { width: 100%; max-width: 600px; background: var(--glass); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); position: relative; }
     
-    /* Edit Toggle Styling */
-    .edit-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid var(--border); color: var(--primary); padding: 8px 15px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; }
+    /* Buttons */
+    .edit-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--primary); padding: 8px 15px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; }
     .save-btn { display: none; width: 100%; background: #10b981; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+    .delete-area { margin-top: 50px; padding-top: 20px; border-top: 1px solid rgba(255,77,77,0.2); text-align: center; }
+    .delete-btn { background: none; border: 1px solid var(--danger); color: var(--danger); padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; transition: 0.3s; }
+    .delete-btn:hover { background: var(--danger); color: white; }
 
+    /* Layout */
     .header { text-align: center; margin-bottom: 30px; }
     h1 { color: var(--primary); font-weight: 600; margin-bottom: 5px; font-size: 1.8rem; }
     .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; background: rgba(79, 172, 254, 0.2); color: var(--accent); }
-
     .section-title { font-size: 0.7rem; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; margin: 25px 0 10px 0; display: block; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; }
-    
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .label { color: #64748b; font-size: 0.75rem; margin-bottom: 2px; }
+    .value { font-size: 1rem; color: #f1f5f9; padding: 5px 0; }
     
-    /* View vs Edit Inputs */
-    .value { font-size: 1rem; color: #f1f5f9; padding: 5px 0; border-bottom: 1px solid transparent; }
     input.edit-mode, select.edit-mode, textarea.edit-mode { 
         display: none; width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--primary); 
         color: white; padding: 8px; border-radius: 8px; font-family: inherit; font-size: 1rem;
@@ -56,41 +57,26 @@
 
   <span class="section-title">Personal Details</span>
   <div class="info-grid">
-    <div class="info-item">
-      <span class="label">Gender</span>
-      <span class="value" id="pGender_view">-</span>
-      <select id="pGender_edit" class="edit-mode">
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-      </select>
+    <div class="info-item"><span class="label">Gender</span><span class="value" id="pGender_view">-</span>
+      <select id="pGender_edit" class="edit-mode"><option value="Male">Male</option><option value="Female">Female</option></select>
     </div>
-    <div class="info-item">
-      <span class="label">Birthday</span>
-      <span class="value" id="pBirthday_view">-</span>
+    <div class="info-item"><span class="label">Birthday</span><span class="value" id="pBirthday_view">-</span>
       <input type="text" id="pBirthday_edit" class="edit-mode">
     </div>
-    <div class="info-item">
-      <span class="label">Phone</span>
-      <span class="value" id="pPhone_view">-</span>
+    <div class="info-item"><span class="label">Phone</span><span class="value" id="pPhone_view">-</span>
       <input type="tel" id="pPhone_edit" class="edit-mode">
     </div>
-    <div class="info-item">
-      <span class="label">Residence</span>
-      <span class="value" id="pHostel_view">-</span>
+    <div class="info-item"><span class="label">Residence</span><span class="value" id="pHostel_view">-</span>
       <input type="text" id="pHostel_edit" class="edit-mode">
     </div>
   </div>
 
   <span class="section-title">Church Life</span>
   <div class="info-grid">
-    <div class="info-item">
-      <span class="label">Department</span>
-      <span class="value" id="pDept_view">-</span>
+    <div class="info-item"><span class="label">Department</span><span class="value" id="pDept_view">-</span>
       <input type="text" id="pDept_edit" class="edit-mode">
     </div>
-    <div class="info-item">
-      <span class="label">Date Joined</span>
-      <span class="value" id="pDateJoined_view">-</span>
+    <div class="info-item"><span class="label">Date Joined</span><span class="value" id="pDateJoined_view">-</span>
       <input type="date" id="pDateJoined_edit" class="edit-mode">
     </div>
   </div>
@@ -103,11 +89,15 @@
 
   <button id="saveBtn" class="save-btn">Save Changes</button>
   <a href="#" id="callLink" class="call-btn">Call Member Now</a>
+
+  <div class="delete-area">
+    <button id="deleteBtn" class="delete-btn">Delete Member Permanentely</button>
+  </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { initializeFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  import { initializeFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
   const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", authDomain: "fob-database-139d1.firebaseapp.com", projectId: "fob-database-139d1", storageBucket: "fob-database-139d1.firebasestorage.app", messagingSenderId: "375165731354", appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
   const app = initializeApp(firebaseConfig);
@@ -121,7 +111,6 @@
     const docSnap = await getDoc(doc(db, "members", docId));
     if (docSnap.exists()) {
       const d = docSnap.data();
-      // View Elements
       document.getElementById('pName_view').textContent = d.full_name || "-";
       document.getElementById('pStatus_view').textContent = d.status || "-";
       document.getElementById('pGender_view').textContent = d.gender || "-";
@@ -132,7 +121,6 @@
       document.getElementById('pDateJoined_view').textContent = d.date_joined || "-";
       document.getElementById('pNotes_view').textContent = d.notes || "-";
       
-      // Edit Inputs
       document.getElementById('pName_edit').value = d.full_name || "";
       document.getElementById('pStatus_edit').value = d.status || "Regular Member";
       document.getElementById('pGender_edit').value = d.gender || "Male";
@@ -147,7 +135,7 @@
     }
   }
 
-  // Toggle Function
+  // Edit Mode Toggle
   document.getElementById('toggleEdit').addEventListener('click', () => {
     const isEditing = document.getElementById('saveBtn').style.display === "block";
     document.querySelectorAll('.value').forEach(el => el.style.display = isEditing ? "block" : "none");
@@ -156,11 +144,10 @@
     document.getElementById('toggleEdit').textContent = isEditing ? "Edit Member" : "Cancel";
   });
 
-  // Save Function
+  // Save Logic
   document.getElementById('saveBtn').addEventListener('click', async () => {
     const btn = document.getElementById('saveBtn');
     btn.disabled = true; btn.textContent = "Updating...";
-    
     try {
       await updateDoc(doc(db, "members", docId), {
         full_name: document.getElementById('pName_edit').value,
@@ -173,8 +160,26 @@
         date_joined: document.getElementById('pDateJoined_edit').value,
         notes: document.getElementById('pNotes_edit').value
       });
-      location.reload(); // Refresh to see changes
-    } catch (e) { alert("Error: " + e.message); btn.disabled = false; btn.textContent = "Save Changes"; }
+      location.reload();
+    } catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+  });
+
+  // DELETE LOGIC WITH CONFIRMATION
+  document.getElementById('deleteBtn').addEventListener('click', async () => {
+    const confirmation = confirm("⚠️ ARE YOU SURE?\n\nThis will permanently remove this member from the database. This action cannot be undone.");
+    
+    if (confirmation) {
+        const secondCheck = confirm("FINAL CONFIRMATION: Please click OK to confirm deletion.");
+        if (secondCheck) {
+            try {
+                await deleteDoc(doc(db, "members", docId));
+                alert("Member successfully removed.");
+                window.location.href = "index.html"; // Send back to list
+            } catch (e) {
+                alert("Delete failed: " + e.message);
+            }
+        }
+    }
   });
 
   loadProfile();
