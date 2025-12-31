@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Member Profile | ShepherdNet</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     :root { 
-        /* Dark Mode (Default) */
         --primary: #4facfe; 
         --bg: #0f172a;
         --glass: rgba(255, 255, 255, 0.05); 
@@ -16,10 +15,11 @@
         --text: #ffffff;
         --text-dim: rgba(255, 255, 255, 0.5);
         --input-bg: rgba(0,0,0,0.2);
+        --sidebar-width: 280px;
+        --sidebar-collapsed: 80px;
     }
 
     [data-theme="light"] {
-        /* Light Mode */
         --bg: #f1f5f9;
         --glass: #ffffff;
         --border: #e2e8f0;
@@ -29,118 +29,142 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; min-height: 100vh; padding: 20px; transition: 0.3s; }
-    
-    .container { max-width: 500px; margin: 0 auto; padding-bottom: 50px; }
-    
-    .profile-header { text-align: center; padding: 30px 20px; background: var(--glass); border-radius: 24px; border: 1px solid var(--border); margin-bottom: 20px; position: relative; backdrop-filter: blur(10px); }
-    
-    /* Photo styling & Edit Overlay */
-    .avatar-container { width: 120px; height: 120px; margin: 0 auto 15px; position: relative; cursor: pointer; }
-    .avatar-circle, .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 600; color: #0f172a; border: 4px solid var(--primary); background: linear-gradient(45deg, #4facfe, #00f2fe); }
-    
-    .photo-edit-overlay { 
-        position: absolute; bottom: 5px; right: 5px; 
-        background: var(--primary); width: 32px; height: 32px; 
-        border-radius: 50%; display: flex; align-items: center; 
-        justify-content: center; border: 3px solid var(--bg); color: #0f172a; font-size: 1rem;
+    body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; display: flex; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
+
+    /* --- SIDEBAR SYSTEM --- */
+    nav { 
+        width: var(--sidebar-width); background: var(--glass); backdrop-filter: blur(15px); 
+        border-right: 1px solid var(--border); padding: 40px 20px; display: flex; 
+        flex-direction: column; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: sticky; top: 0; height: 100vh; z-index: 1000;
+    }
+    body.sidebar-hidden nav { width: var(--sidebar-collapsed); padding: 40px 15px; }
+    body.sidebar-hidden nav a span:last-child, body.sidebar-hidden .theme-switch span:first-child { display: none; }
+
+    .menu-toggle {
+        position: absolute; right: -15px; top: 30px; width: 30px; height: 30px;
+        background: var(--primary); border-radius: 50%; display: flex;
+        align-items: center; justify-content: center; cursor: pointer; color: #0f172a;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1100; transition: 0.3s;
+    }
+    body.sidebar-hidden .menu-toggle { transform: rotate(180deg); }
+
+    nav a { 
+        display: flex; align-items: center; gap: 15px; color: var(--text); 
+        text-decoration: none; padding: 12px 15px; border-radius: 12px; 
+        opacity: 0.7; transition: 0.3s; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap;
+    }
+    nav a:hover, nav a.active { opacity: 1; color: var(--primary); background: var(--glass); }
+
+    .theme-switch {
+        margin-top: 20px; padding: 12px 15px; border-radius: 12px;
+        background: var(--glass); border: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 0.8rem; cursor: pointer;
     }
 
-    h1 { font-size: 1.5rem; margin-bottom: 5px; color: var(--text); }
-    .badge { background: rgba(79, 172, 254, 0.2); color: var(--primary); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
-
-    .info-card { background: var(--glass); border-radius: 20px; border: 1px solid var(--border); padding: 20px; margin-bottom: 15px; backdrop-filter: blur(5px); }
-    .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); margin-bottom: 15px; display: block; opacity: 0.8; font-weight: 600; }
-    .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); align-items: center; }
-    .data-row:last-child { border: none; }
-    .label { color: var(--text-dim); font-size: 0.85rem; }
-    .value { font-weight: 400; font-size: 0.95rem; text-align: right; color: var(--text); }
-
-    .edit-mode { display: none; width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 8px; font-family: inherit; margin-top: 5px; outline: none; }
-    .edit-mode:focus { border-color: var(--primary); }
+    /* --- PROFILE CONTENT --- */
+    main { flex: 1; padding: 40px 20px; overflow-y: auto; }
+    .container { max-width: 600px; margin: 0 auto; }
     
-    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-    .btn { flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; text-align: center; text-decoration: none; font-size: 0.9rem; }
+    .profile-header { text-align: center; padding: 40px 20px; background: var(--glass); border-radius: 30px; border: 1px solid var(--border); margin-bottom: 20px; position: relative; backdrop-filter: blur(10px); }
+    
+    .avatar-container { width: 140px; height: 140px; margin: 0 auto 20px; position: relative; cursor: pointer; }
+    .avatar-circle, .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; font-weight: 600; color: #0f172a; border: 5px solid var(--primary); background: linear-gradient(45deg, #4facfe, #00f2fe); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    
+    .photo-edit-overlay { position: absolute; bottom: 8px; right: 8px; background: var(--primary); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--bg); color: #0f172a; font-size: 1.1rem; }
+
+    .info-card { background: var(--glass); border-radius: 24px; border: 1px solid var(--border); padding: 25px; margin-bottom: 20px; }
+    .section-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--primary); margin-bottom: 20px; display: block; font-weight: 600; }
+    .data-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: center; }
+    .data-row:last-child { border: none; }
+    .label { color: var(--text-dim); font-size: 0.9rem; }
+    .value { font-weight: 500; font-size: 1rem; text-align: right; color: var(--text); }
+
+    .edit-mode { display: none; width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text); padding: 12px; border-radius: 10px; font-family: inherit; margin-top: 8px; outline: none; }
+    
+    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+    .btn { padding: 16px; border-radius: 15px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; text-align: center; text-decoration: none; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
     
     .btn-edit { background: var(--glass); color: var(--text); border: 1px solid var(--border); }
     .btn-call { background: var(--primary); color: #0f172a; }
-    .btn-save { display: none; background: #10b981; color: white; width: 100%; margin-top: 10px; }
-    .btn-delete { color: #ff6b6b; font-size: 0.8rem; background: none; border: none; width: 100%; margin-top: 30px; opacity: 0.6; cursor: pointer; }
-    .btn-delete:hover { opacity: 1; }
-    
-    .back-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--text-dim); text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
-    .back-nav:hover { color: var(--primary); }
-    
-    #uploadProgress { font-size: 0.7rem; color: var(--primary); margin-top: 10px; display: none; text-align: center; font-weight: 600; }
+    .btn-whatsapp { background: #25D366; color: white; grid-column: span 2; }
+    .btn-save { display: none; background: #10b981; color: white; width: 100%; margin-top: 15px; }
+    .btn-delete { color: #ff6b6b; font-size: 0.85rem; background: none; border: none; width: 100%; margin-top: 40px; opacity: 0.6; cursor: pointer; }
+
+    /* Mobile Logic */
+    @media (max-width: 768px) {
+        nav { position: fixed; left: 0; transform: translateX(-100%); }
+        body.mobile-nav-open nav { transform: translateX(0); width: 280px; }
+        .mobile-trigger { display: block !important; position: fixed; bottom: 30px; left: 30px; background: var(--primary); padding: 15px; border-radius: 50%; z-index: 2000; }
+        main { padding-top: 60px; }
+    }
+    .mobile-trigger { display: none; cursor: pointer; }
   </style>
 </head>
-<body>
+<body class="sidebar-hidden">
 
-<div class="container">
-  <a href="index.html" class="back-nav">← Back to Flock</a>
+  <div class="mobile-trigger" id="mobileBtn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+  </div>
 
-  <div class="profile-header">
-    <div class="avatar-container" id="avatarTrigger">
-        <img id="pPhoto_img" class="avatar-img" style="display:none;">
-        <div class="avatar-circle" id="avatar-initial">-</div>
-        <div class="photo-edit-overlay">✎</div>
-        <input type="file" id="photoInput" accept="image/*" style="display:none;">
+  <nav id="sidebar">
+    <div class="menu-toggle" id="toggleBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </div>
-    <div id="uploadProgress">Uploading new photo...</div>
+    <div style="margin-bottom: 40px; padding: 10px; font-weight: 800; color: var(--primary);">S-NET</div>
+    <a href="index.html"><span>📋</span> <span>Back to List</span></a>
+    <a href="../list/settings.html"><span>⚙️</span> <span>Settings</span></a>
     
-    <h1 id="pName_view">Loading...</h1>
-    <input type="text" id="pFirstName_edit" class="edit-mode" placeholder="First Name">
-    <input type="text" id="pLastName_edit" class="edit-mode" placeholder="Last Name">
-    <span class="badge" id="pStatus_view">...</span>
-    <select id="pStatus_edit" class="edit-mode">
-        <option value="New Convert">New Convert</option>
-        <option value="Established Member">Established Member</option>
-    </select>
-  </div>
+    <div class="theme-switch" id="themeToggle">
+        <span>Theme Mode</span>
+        <span id="themeIcon">🌙</span>
+    </div>
+  </nav>
 
-  <div class="info-card">
-    <span class="section-title">Contact Information</span>
-    <div class="data-row">
-      <span class="label">Phone</span>
-      <span class="value" id="pPhone_view">-</span>
-      <input type="tel" id="pPhone_edit" class="edit-mode">
-    </div>
-    <div class="data-row">
-      <span class="label">Address / Hostel</span>
-      <span class="value" id="pHostel_view">-</span>
-      <input type="text" id="pHostel_edit" class="edit-mode">
-    </div>
-  </div>
+  <main>
+    <div class="container">
+      <div class="profile-header">
+        <div class="avatar-container" id="avatarTrigger">
+            <img id="pPhoto_img" class="avatar-img" style="display:none;">
+            <div class="avatar-circle" id="avatar-initial">-</div>
+            <div class="photo-edit-overlay">✎</div>
+            <input type="file" id="photoInput" accept="image/*" style="display:none;">
+        </div>
+        <div id="uploadProgress" style="display:none; font-size: 0.8rem; color: var(--primary);">Uploading...</div>
+        
+        <h1 id="pName_view">Loading...</h1>
+        <input type="text" id="pFirstName_edit" class="edit-mode" placeholder="First Name">
+        <input type="text" id="pLastName_edit" class="edit-mode" placeholder="Last Name">
+        <span class="badge" id="pStatus_view" style="background:rgba(79,172,254,0.2); color:var(--primary); padding:5px 15px; border-radius:20px; font-size:0.8rem;">...</span>
+        <select id="pStatus_edit" class="edit-mode">
+            <option value="New Convert">New Convert</option>
+            <option value="Established Member">Established Member</option>
+        </select>
+      </div>
 
-  <div class="info-card">
-    <span class="section-title">Personal Info</span>
-    <div class="data-row"><span class="label">Gender</span><span class="value" id="pGender_view">-</span>
-      <select id="pGender_edit" class="edit-mode"><option value="Male">Male</option><option value="Female">Female</option></select>
-    </div>
-    <div class="data-row"><span class="label">Birthday</span><span class="value" id="pBirthday_view">-</span>
-      <input type="date" id="pBirthday_edit" class="edit-mode">
-    </div>
-  </div>
+      <div class="info-card">
+        <span class="section-title">Contact Information</span>
+        <div class="data-row"><span class="label">Phone</span><span class="value" id="pPhone_view">-</span><input type="tel" id="pPhone_edit" class="edit-mode"></div>
+        <div class="data-row"><span class="label">Address / Hostel</span><span class="value" id="pHostel_view">-</span><input type="text" id="pHostel_edit" class="edit-mode"></div>
+      </div>
 
-  <div class="info-card">
-    <span class="section-title">Record Details</span>
-    <div class="data-row"><span class="label">Course</span><span class="value" id="pCourse_view">-</span>
-      <input type="text" id="pCourse_edit" class="edit-mode">
-    </div>
-    <div class="data-row"><span class="label">Level</span><span class="value" id="pLevel_view">-</span>
-      <input type="text" id="pLevel_edit" class="edit-mode">
-    </div>
-    <div class="data-row"><span class="label">Date Joined</span><span class="value" id="pDateJoined_view">-</span></div>
-  </div>
+      <div class="info-card">
+        <span class="section-title">Personal Details</span>
+        <div class="data-row"><span class="label">Birthday</span><span class="value" id="pBirthday_view">-</span><input type="date" id="pBirthday_edit" class="edit-mode"></div>
+        <div class="data-row"><span class="label">Gender</span><span class="value" id="pGender_view">-</span><select id="pGender_edit" class="edit-mode"><option value="Male">Male</option><option value="Female">Female</option></select></div>
+      </div>
 
-  <div class="btn-group" id="normal-btns">
-    <button id="toggleEdit" class="btn btn-edit">Edit Profile</button>
-    <a href="#" id="callLink" class="btn btn-call">Call Member</a>
-  </div>
+      <div class="btn-group" id="normal-btns">
+        <button id="toggleEdit" class="btn btn-edit">Edit Profile</button>
+        <a href="#" id="callLink" class="btn btn-call">📞 Call</a>
+        <a href="#" id="waLink" class="btn btn-whatsapp">💬 WhatsApp</a>
+      </div>
 
-  <button id="saveBtn" class="btn btn-save">Save Changes</button>
-  <button id="deleteBtn" class="btn btn-delete">Delete Permanently</button>
-</div>
+      <button id="saveBtn" class="btn btn-save">Save Changes</button>
+      <button id="deleteBtn" class="btn btn-delete">Delete Permanently</button>
+    </div>
+  </main>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
@@ -153,7 +177,6 @@
     authDomain: "fob-database-139d1.firebaseapp.com", 
     projectId: "fob-database-139d1", 
     storageBucket: "fob-database-139d1.firebasestorage.app", 
-    messagingSenderId: "375165731354", 
     appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" 
   };
 
@@ -165,127 +188,114 @@
   const urlParams = new URLSearchParams(window.location.search);
   const docId = urlParams.get('id')?.split('#')[0];
 
-  // --- THEME ENGINE SYNC ---
+  // UI Elements
+  const toggleBtn = document.getElementById('toggleBtn');
+  const mobileBtn = document.getElementById('mobileBtn');
+  const themeToggle = document.getElementById('themeToggle');
+  const themeIcon = document.getElementById('themeIcon');
+
+  // Sidebar & Theme Sync
+  toggleBtn.onclick = () => document.body.classList.toggle('sidebar-hidden');
+  mobileBtn.onclick = () => document.body.classList.toggle('mobile-nav-open');
+  
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
+  themeIcon.innerText = savedTheme === 'dark' ? '🌙' : '☀️';
+
+  themeToggle.onclick = () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    themeIcon.innerText = next === 'dark' ? '🌙' : '☀️';
+  };
 
   onAuthStateChanged(auth, (user) => {
-    if (user) { loadProfile(); } 
-    else { document.getElementById('pName_view').textContent = "Unauthorized Access"; }
+    if (user) loadProfile();
+    else window.location.href = "../index.html";
   });
 
   async function loadProfile() {
     if (!docId) return;
-    try {
-        const docSnap = await getDoc(doc(db, "members", docId));
-        if (docSnap.exists()) {
-            const d = docSnap.data();
-            
-            // Photo Logic
-            if (d.photo_url) {
-                const imgEl = document.getElementById('pPhoto_img');
-                imgEl.src = d.photo_url; imgEl.style.display = "block";
-                document.getElementById('avatar-initial').style.display = "none";
-            } else {
-                document.getElementById('avatar-initial').textContent = d.first_name ? d.first_name[0].toUpperCase() : "?";
-                document.getElementById('avatar-initial').style.display = "flex";
-                document.getElementById('pPhoto_img').style.display = "none";
-            }
-
-            document.getElementById('pName_view').textContent = `${d.first_name || ''} ${d.last_name || ''}`.trim();
-            document.getElementById('pStatus_view').textContent = d.status || "-";
-            document.getElementById('pGender_view').textContent = d.gender || "-";
-            document.getElementById('pBirthday_view').textContent = d.dob || "-";
-            document.getElementById('pPhone_view').textContent = d.phone || "-";
-            document.getElementById('pHostel_view').textContent = d.hostel || "-";
-            document.getElementById('pCourse_view').textContent = d.course || "-";
-            document.getElementById('pLevel_view').textContent = d.level || "-";
-
-            if (d.timestamp) {
-                document.getElementById('pDateJoined_view').textContent = new Date(d.timestamp).toLocaleDateString('en-GB', {year:'numeric', month:'short', day:'numeric'});
-            }
-
-            // Populate Inputs for Edit Mode
-            document.getElementById('pFirstName_edit').value = d.first_name || "";
-            document.getElementById('pLastName_edit').value = d.last_name || "";
-            document.getElementById('pStatus_edit').value = d.status || "New Convert";
-            document.getElementById('pPhone_edit').value = d.phone || "";
-            document.getElementById('pHostel_edit').value = d.hostel || "";
-            document.getElementById('pCourse_edit').value = d.course || "";
-            document.getElementById('pLevel_edit').value = d.level || "";
-            document.getElementById('pGender_edit').value = d.gender || "Male";
-            document.getElementById('pBirthday_edit').value = d.dob || "";
-
-            if(d.phone) document.getElementById('callLink').href = `tel:${d.phone}`;
+    const docSnap = await getDoc(doc(db, "members", docId));
+    if (docSnap.exists()) {
+        const d = docSnap.data();
+        
+        // Render View
+        if (d.photo_url) {
+            document.getElementById('pPhoto_img').src = d.photo_url;
+            document.getElementById('pPhoto_img').style.display = "block";
+            document.getElementById('avatar-initial').style.display = "none";
+        } else {
+            document.getElementById('avatar-initial').textContent = d.first_name?.[0] || "?";
         }
-    } catch (err) { console.error(err); }
+
+        document.getElementById('pName_view').textContent = `${d.first_name || ''} ${d.last_name || ''}`;
+        document.getElementById('pStatus_view').textContent = d.status || "Active";
+        document.getElementById('pPhone_view').textContent = d.phone || "-";
+        document.getElementById('pHostel_view').textContent = d.hostel || "-";
+        document.getElementById('pBirthday_view').textContent = d.dob || "-";
+        document.getElementById('pGender_view').textContent = d.gender || "-";
+
+        // Links
+        if(d.phone) {
+            document.getElementById('callLink').href = `tel:${d.phone}`;
+            document.getElementById('waLink').href = `https://wa.me/${d.phone.replace(/\s+/g, '')}`;
+        }
+
+        // Prep Edit Inputs
+        document.getElementById('pFirstName_edit').value = d.first_name || "";
+        document.getElementById('pLastName_edit').value = d.last_name || "";
+        document.getElementById('pPhone_edit').value = d.phone || "";
+        document.getElementById('pHostel_edit').value = d.hostel || "";
+        document.getElementById('pBirthday_edit').value = d.dob || "";
+        document.getElementById('pStatus_edit').value = d.status || "New Convert";
+    }
   }
 
-  // PHOTO UPLOAD
-  document.getElementById('avatarTrigger').addEventListener('click', () => document.getElementById('photoInput').click());
-  
-  document.getElementById('photoInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const progressEl = document.getElementById('uploadProgress');
-    progressEl.style.display = "block";
-    
-    try {
-        const fileRef = ref(storage, `member_photos/${docId}_${Date.now()}`);
-        await uploadBytes(fileRef, file);
-        const newUrl = await getDownloadURL(fileRef);
-        
-        await updateDoc(doc(db, "members", docId), { photo_url: newUrl });
-        location.reload();
-    } catch (err) {
-        alert("Photo upload failed: " + err.message);
-        progressEl.style.display = "none";
-    }
-  });
-
-  // Toggle Edit Visibility
-  document.getElementById('toggleEdit').addEventListener('click', () => {
+  // Edit Logic
+  document.getElementById('toggleEdit').onclick = () => {
     const isEditing = document.getElementById('saveBtn').style.display === "block";
-    
     document.querySelectorAll('.value').forEach(el => el.style.display = isEditing ? "block" : "none");
     document.querySelectorAll('.edit-mode').forEach(el => el.style.display = isEditing ? "none" : "block");
-    
     document.getElementById('saveBtn').style.display = isEditing ? "none" : "block";
-    document.getElementById('callLink').style.display = isEditing ? "none" : "flex";
-    document.getElementById('pStatus_view').style.display = isEditing ? "inline-block" : "none";
-    document.getElementById('pName_view').style.display = isEditing ? "block" : "none";
-    
+    document.getElementById('normal-btns').style.display = isEditing ? "grid" : "none";
     document.getElementById('toggleEdit').textContent = isEditing ? "Edit Profile" : "Cancel";
-    document.getElementById('toggleEdit').classList.toggle('btn-edit');
-  });
+  };
 
-  // Save Changes
-  document.getElementById('saveBtn').addEventListener('click', async () => {
+  document.getElementById('saveBtn').onclick = async () => {
     const btn = document.getElementById('saveBtn');
-    btn.disabled = true; btn.textContent = "Updating...";
-    try {
-      await updateDoc(doc(db, "members", docId), {
+    btn.disabled = true; btn.textContent = "Saving...";
+    await updateDoc(doc(db, "members", docId), {
         first_name: document.getElementById('pFirstName_edit').value,
         last_name: document.getElementById('pLastName_edit').value,
-        status: document.getElementById('pStatus_edit').value,
-        gender: document.getElementById('pGender_edit').value,
-        dob: document.getElementById('pBirthday_edit').value,
         phone: document.getElementById('pPhone_edit').value,
         hostel: document.getElementById('pHostel_edit').value,
-        course: document.getElementById('pCourse_edit').value,
-        level: document.getElementById('pLevel_edit').value
-      });
-      location.reload();
-    } catch (e) { alert(e.message); btn.disabled = false; btn.textContent = "Save Changes"; }
-  });
+        dob: document.getElementById('pBirthday_edit').value,
+        status: document.getElementById('pStatus_edit').value
+    });
+    location.reload();
+  };
 
-  document.getElementById('deleteBtn').addEventListener('click', async () => {
-    if (confirm("Delete member permanently from the database? This cannot be undone.")) {
+  document.getElementById('avatarTrigger').onclick = () => document.getElementById('photoInput').click();
+  document.getElementById('photoInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const prog = document.getElementById('uploadProgress');
+    prog.style.display = "block";
+    const fileRef = ref(storage, `member_photos/${docId}`);
+    await uploadBytes(fileRef, file);
+    const url = await getDownloadURL(fileRef);
+    await updateDoc(doc(db, "members", docId), { photo_url: url });
+    location.reload();
+  };
+
+  document.getElementById('deleteBtn').onclick = async () => {
+    if (confirm("Delete permanently?")) {
         await deleteDoc(doc(db, "members", docId));
         window.location.href = "index.html";
     }
-  });
+  };
 </script>
 </body>
 </html>
