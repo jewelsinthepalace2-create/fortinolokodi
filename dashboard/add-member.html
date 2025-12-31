@@ -158,9 +158,10 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  import { 
+    getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs 
+  } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  // YOUR CONFIG
   const firebaseConfig = { 
     apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
     authDomain: "fob-database-139d1.firebaseapp.com", 
@@ -172,54 +173,52 @@
   
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app); // Note: Removed long polling for standard speed
+  const db = getFirestore(app);
 
   let pId = null;
   let sId = null;
 
-  // 1. LISTEN FOR USER
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       const roleDisplay = document.getElementById('roleDisplay');
       const saveBtn = document.getElementById('saveBtn');
 
       try {
-        // Check Shepherds Collection first
+        // Speed up: Run both checks at the same time
         const shepherdRef = doc(db, "shepherds", user.uid);
-        const shepherdSnap = await getDoc(shepherdRef);
+        const pastorRef = doc(db, "pastors", user.uid);
+        
+        const [shepSnap, pastSnap] = await Promise.all([
+          getDoc(shepherdRef),
+          getDoc(pastorRef)
+        ]);
 
-        if (shepherdSnap.exists()) {
+        if (shepSnap.exists()) {
           sId = user.uid;
-          pId = shepherdSnap.data().assigned_pastor_id || "not_assigned";
-          roleDisplay.innerText = `Logged in as Shepherd: ${shepherdSnap.data().full_name}`;
+          pId = shepSnap.data().assigned_pastor_id || "not_assigned";
+          roleDisplay.innerText = `Logged in as Shepherd: ${shepSnap.data().full_name}`;
+        } else if (pastSnap.exists()) {
+          pId = user.uid;
+          sId = "direct_pastor_entry";
+          roleDisplay.innerText = `Logged in as Pastor: ${pastSnap.data().full_name}`;
         } else {
-          // Check Pastors Collection
-          const pastorRef = doc(db, "pastors", user.uid);
-          const pastorSnap = await getDoc(pastorRef);
-          
-          if (pastorSnap.exists()) {
-            pId = user.uid;
-            sId = "direct_pastor_entry";
-            roleDisplay.innerText = `Logged in as Pastor: ${pastorSnap.data().full_name}`;
-          } else {
-            roleDisplay.innerText = "Error: Role not found in database.";
-          }
+          roleDisplay.innerText = "Error: Role not found. Contact Admin.";
+          return; // Stop here if role is unknown
         }
         
-        // ENABLE BUTTON ONCE ROLE IS LOADED
         saveBtn.disabled = false;
         saveBtn.innerText = "Save Member Data";
 
       } catch (err) {
-        console.error(err);
-        roleDisplay.innerText = "Connection Error. Please refresh.";
+        console.error("Role Check Error:", err);
+        roleDisplay.innerText = "Connection Error. Please check your internet.";
       }
     } else {
-      window.location.href = "login.html"; // Redirect if not logged in
+      window.location.href = "login.html";
     }
   });
 
-  // AGE CALCULATION LOGIC
+  // Attach Age logic to window so HTML onchange can see it
   window.calculateAge = () => {
     const dob = document.getElementById('mBirthday').value;
     if(!dob) return;
@@ -229,27 +228,29 @@
     const m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
     document.getElementById('ageDisplay').innerText = `Calculated Age: ${age} years`;
-    return age;
   };
 
-  // SAVE DATA
   document.getElementById('saveBtn').addEventListener('click', async () => {
-    const phone = document.getElementById('mPhone').value;
+    const phone = document.getElementById('mPhone').value.trim();
+    if(!phone) { alert("Phone number is required"); return; }
+    
     const btn = document.getElementById('saveBtn');
-    
-    // Duplicate Check
-    const q = query(collection(db, "members"), where("phone", "==", phone));
-    const querySnapshot = await getDocs(q);
-    
-    if (!querySnapshot.empty) {
-        alert("Duplicate Phone Number found!");
-        return;
-    }
-
     btn.disabled = true; 
-    btn.textContent = "Saving to Cloud...";
+    btn.textContent = "Checking for duplicates...";
     
     try {
+      // Duplicate Check
+      const q = query(collection(db, "members"), where("phone", "==", phone));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+          alert("This member is already in the system (Duplicate Phone)!");
+          btn.disabled = false;
+          btn.textContent = "Save Member Data";
+          return;
+      }
+
+      btn.textContent = "Saving to Cloud...";
       const birthDate = document.getElementById('mBirthday').value;
       const birthMonthDay = birthDate ? birthDate.substring(5) : null;
 
@@ -264,6 +265,8 @@
         level: document.getElementById('mLevel').value,
         course: document.getElementById('mCourse').value,
         status: document.getElementById('mStatus').value,
+        emergency_name: document.getElementById('mEmergencyName').value,
+        emergency_phone: document.getElementById('mEmergencyPhone').value,
         recorded_by_id: auth.currentUser.uid,
         pastorId: pId,
         shepherdId: sId,
@@ -271,9 +274,9 @@
       });
 
       alert("Member added successfully!");
-      location.reload();
+      window.location.reload();
     } catch (e) {
-      alert("Error: " + e.message);
+      alert("Error saving: " + e.message);
       btn.disabled = false;
       btn.innerText = "Try Again";
     }
