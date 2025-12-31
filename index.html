@@ -9,8 +9,8 @@
     :root {
       --primary: #4facfe;
       --secondary: #00f2fe;
-      --glass: rgba(255, 255, 255, 0.1);
-      --border: rgba(255, 255, 255, 0.2);
+      --glass: rgba(15, 23, 42, 0.65);
+      --border: rgba(255, 255, 255, 0.15);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -18,98 +18,150 @@
     body {
       height: 100vh;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(45deg, #0f172a, #1e293b);
+      /* Using a professional stock image of a shepherd/pasture */
+      background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+                  url('https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      color: white;
       overflow: hidden;
     }
 
-    .blob {
-      position: absolute;
-      width: 400px;
-      height: 400px;
-      background: linear-gradient(var(--primary), var(--secondary));
-      filter: blur(80px);
-      border-radius: 50%;
-      z-index: 1;
-      animation: move 15s infinite alternate;
+    /* Scripture Section */
+    #scripture-container {
+      max-width: 500px;
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 0 20px;
+      min-height: 80px;
     }
-    .blob-1 { top: -150px; left: -100px; }
-    .blob-2 { bottom: -150px; right: -100px; animation-delay: -7s; }
 
-    @keyframes move {
-      from { transform: translate(0, 0); }
-      to { transform: translate(100px, 150px); }
+    .scripture-text {
+      font-style: italic;
+      font-weight: 300;
+      font-size: 1.1rem;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .scripture-ref {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 2px;
     }
 
     #login-container {
-      position: relative;
       width: 90%;
       max-width: 400px;
       padding: 40px;
       background: var(--glass);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
       border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      border-radius: 28px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       z-index: 10;
-      color: white;
-      text-align: center;
     }
 
-    h2 { font-weight: 300; letter-spacing: 3px; margin-bottom: 30px; }
+    h2 { font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; color: var(--primary); }
+    p.subtitle { font-size: 0.8rem; color: #94a3b8; margin-bottom: 30px; }
+
+    .input-wrapper { position: relative; width: 100%; margin: 15px 0; }
 
     input {
       width: 100%;
       padding: 14px 18px;
-      margin: 12px 0;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       color: white;
       outline: none;
       font-size: 1rem;
+      transition: all 0.3s;
+    }
+
+    input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.1); }
+
+    .toggle-password {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      opacity: 0.6;
       transition: 0.3s;
     }
 
-    input:focus { background: rgba(255, 255, 255, 0.1); border-color: var(--primary); }
+    .toggle-password:hover { opacity: 1; }
 
-    button {
+    button#loginBtn {
       width: 100%;
       padding: 15px;
-      margin-top: 20px;
-      background: white;
+      margin-top: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: #0f172a;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       font-weight: 600;
+      font-size: 1rem;
       cursor: pointer;
       transition: 0.3s;
     }
 
-    button:hover { transform: translateY(-2px); background: #f0f0f0; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button#loginBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(79, 172, 254, 0.4); }
 
-    .status-msg { margin-top: 20px; font-size: 0.85rem; color: #ff6b6b; min-height: 1.2rem; }
+    .footer-links { margin-top: 25px; font-size: 0.8rem; display: flex; justify-content: center; gap: 15px; }
+    .footer-links a { color: #94a3b8; text-decoration: none; transition: 0.3s; }
+    .footer-links a:hover { color: white; }
+
+    .status-msg { margin-top: 15px; font-size: 0.8rem; color: #ff6b6b; min-height: 1.2rem; }
   </style>
 </head>
 <body>
 
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
+  <div id="scripture-container">
+    <div id="scripture-box">
+      <p class="scripture-text" id="scriptureText"></p>
+      <span class="scripture-ref" id="scriptureRef"></span>
+    </div>
+  </div>
 
   <div id="login-container">
-    <h2>SHEPHERDNET</h2>
-    <input type="email" id="email" placeholder="Email Address">
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login</button>
+    <h2>ShepherdNet</h2>
+    <p class="subtitle">Secure Shepherd Management Portal</p>
+    
+    <div class="input-wrapper">
+        <input type="email" id="email" placeholder="Email Address">
+    </div>
+    
+    <div class="input-wrapper">
+        <input type="password" id="password" placeholder="Password">
+        <div class="toggle-password" id="togglePassword">
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+    </div>
+
+    <button id="loginBtn">Secure Login</button>
     <p id="status" class="status-msg"></p>
+
+    <div class="footer-links">
+        <a href="#" id="forgotPass">Forgot Password?</a>
+        <span>•</span>
+        <a href="mailto:admin@fob.com">Support</a>
+    </div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
   import { initializeFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -121,84 +173,110 @@
     appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
   };
 
-  // 1. Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
 
-  // 2. Initialize Firestore with your CUSTOM database name
-  const db = initializeFirestore(app, {
-    experimentalForceLongPolling: true, 
-  }, "fobrealdbase"); 
+  // --- Scripture Engine ---
+  const scriptures = [
+    { text: "The LORD is my shepherd; I shall not want.", ref: "Psalm 23:1" },
+    { text: "I am the good shepherd. The good shepherd lays down his life for the sheep.", ref: "John 10:11" },
+    { text: "He tends his flock like a shepherd: He gathers the lambs in his arms.", ref: "Isaiah 40:11" },
+    { text: "Be shepherds of God’s flock that is under your care, watching over them.", ref: "1 Peter 5:2" }
+  ];
 
+  let currentIdx = 0;
+  const sText = document.getElementById('scriptureText');
+  const sRef = document.getElementById('scriptureRef');
+
+  function updateScripture() {
+    sText.style.opacity = 0;
+    setTimeout(() => {
+      sText.textContent = `"${scriptures[currentIdx].text}"`;
+      sRef.textContent = scriptures[currentIdx].ref;
+      sText.style.opacity = 1;
+      currentIdx = (currentIdx + 1) % scriptures.length;
+    }, 1500);
+  }
+  updateScripture();
+  setInterval(updateScripture, 10000);
+
+  // --- Password UI Logic ---
+  const passwordInput = document.getElementById('password');
+  const toggleBtn = document.getElementById('togglePassword');
+  const eyeIcon = document.getElementById('eyeIcon');
+
+  toggleBtn.addEventListener('click', () => {
+    const isPass = passwordInput.type === 'password';
+    passwordInput.type = isPass ? 'text' : 'password';
+    // Update icon appearance
+    eyeIcon.style.color = isPass ? '#4facfe' : 'currentColor';
+  });
+
+  // --- Authentication Logic ---
   const statusEl = document.getElementById('status');
   const loginBtn = document.getElementById('loginBtn');
 
-  // Helper function to scan collections for the User's Role
   async function findUserRole(uid) {
-    const collections = ['pastors', 'shepherds', 'members'];
+    const collections = ['master_admin', 'pastors', 'shepherds', 'members'];
     for (const col of collections) {
       try {
         const snap = await getDoc(doc(db, col, uid));
         if (snap.exists()) return snap.data().role;
-      } catch (e) {
-        console.error(`Error checking ${col}:`, e);
-      }
+      } catch (e) { console.error(e); }
     }
     return null;
   }
 
-  // Login Handler
   loginBtn.addEventListener('click', async () => {
     const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const password = passwordInput.value;
 
     if (!email || !password) {
-      statusEl.textContent = "Please fill in all fields.";
+      statusEl.textContent = "Credential fields required.";
       return;
     }
 
-    // UI State: Loading
     loginBtn.disabled = true;
-    loginBtn.textContent = "Authenticating...";
-    statusEl.textContent = "";
-
+    loginBtn.textContent = "Connecting...";
+    
     try {
-      // Step 1: Sign In
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      
-      // Step 2: Fetch Role from fobrealdbase
       statusEl.style.color = "#4facfe";
-      statusEl.textContent = "Verifying permissions...";
+      statusEl.textContent = "Synchronizing account...";
+      
       const role = await findUserRole(cred.user.uid);
+      if (!role) throw new Error("Account profile not found.");
 
-      if (!role) {
-        throw new Error("User document not found. Please contact admin.");
-      }
-
-      // Step 3: Redirect
       const routes = {
-        "master_admin": "admin/index.html",
-        "pastor": "pastor/index.html",
-        "shepherd": "shepherd/index.html",
-        "member": "list/index.html"
+        "master_admin": "admin/index.html", "pastor": "pastor/index.html",
+        "shepherd": "shepherd/index.html", "member": "list/index.html"
       };
 
-      if (routes[role]) {
-        statusEl.textContent = "Access Granted. Redirecting...";
-        window.location.href = routes[role];
-      } else {
-        throw new Error("Unauthorized role assigned.");
-      }
+      if (routes[role]) window.location.href = routes[role];
+      else throw new Error("Unauthorized access level.");
 
     } catch (err) {
-      console.error(err);
       statusEl.style.color = "#ff6b6b";
-      statusEl.textContent = err.message.includes("auth/") 
-        ? "Invalid email or password." 
-        : err.message;
-      
+      statusEl.textContent = "Authentication failed. Check credentials.";
       loginBtn.disabled = false;
-      loginBtn.textContent = "Login";
+      loginBtn.textContent = "Secure Login";
+    }
+  });
+
+  // --- Forgot Password ---
+  document.getElementById('forgotPass').addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    if (!email) {
+      statusEl.textContent = "Enter your email first to reset password.";
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("Reset link sent to your email!");
+    } catch (err) {
+      alert("Error: " + err.message);
     }
   });
 </script>
