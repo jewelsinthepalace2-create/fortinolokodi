@@ -112,11 +112,22 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { initializeFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+// Add getFirestore here
+import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", authDomain: "fob-database-139d1.firebaseapp.com", projectId: "fob-database-139d1", storageBucket: "fob-database-139d1.firebasestorage.app", messagingSenderId: "375165731354", appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
-  const app = initializeApp(firebaseConfig);
-  const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
+const firebaseConfig = { 
+  apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
+  authDomain: "fob-database-139d1.firebaseapp.com", 
+  projectId: "fob-database-139d1", 
+  storageBucket: "fob-database-139d1.firebasestorage.app", 
+  messagingSenderId: "375165731354", 
+  appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" 
+};
+
+const app = initializeApp(firebaseConfig);
+
+// Use getFirestore and pass the database name as the second argument
+const db = getFirestore(app, "fobrealdbase");
 
   const urlParams = new URLSearchParams(window.location.search);
   const rawId = urlParams.get('id');
