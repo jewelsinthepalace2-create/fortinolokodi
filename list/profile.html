@@ -11,8 +11,13 @@
     body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; min-height: 100vh; padding: 20px; }
     .container { max-width: 500px; margin: 0 auto; padding-bottom: 100px; }
     
-    .profile-header { text-align: center; padding: 30px 20px; background: var(--glass); border-radius: 24px; border: 1px solid var(--border); margin-bottom: 20px; }
-    .avatar-circle { width: 80px; height: 80px; background: linear-gradient(45deg, #4facfe, #00f2fe); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 600; color: #0f172a; }
+    .profile-header { text-align: center; padding: 30px 20px; background: var(--glass); border-radius: 24px; border: 1px solid var(--border); margin-bottom: 20px; position: relative; }
+    
+    /* Photo styling */
+    .avatar-container { width: 100px; height: 100px; margin: 0 auto 15px; position: relative; }
+    .avatar-circle, .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 600; color: #0f172a; border: 3px solid var(--primary); }
+    .avatar-circle { background: linear-gradient(45deg, #4facfe, #00f2fe); }
+    
     h1 { font-size: 1.5rem; margin-bottom: 5px; }
     .badge { background: rgba(79, 172, 254, 0.2); color: var(--primary); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
 
@@ -39,7 +44,10 @@
   <a href="index.html" class="back-nav">← Back to Flock</a>
 
   <div class="profile-header">
-    <div class="avatar-circle" id="avatar-initial">-</div>
+    <div class="avatar-container">
+        <img id="pPhoto_img" class="avatar-img" style="display:none;">
+        <div class="avatar-circle" id="avatar-initial">-</div>
+    </div>
     <h1 id="pName_view">Loading...</h1>
     <input type="text" id="pFirstName_edit" class="edit-mode" placeholder="First Name">
     <input type="text" id="pLastName_edit" class="edit-mode" placeholder="Last Name">
@@ -79,7 +87,7 @@
   </div>
 
   <div class="info-card">
-    <span class="section-title">Academic Details</span>
+    <span class="section-title">Record Details</span>
     <div class="data-row">
       <span class="label">Course</span>
       <span class="value" id="pCourse_view">-</span>
@@ -89,6 +97,10 @@
       <span class="label">Level</span>
       <span class="value" id="pLevel_view">-</span>
       <input type="text" id="pLevel_edit" class="edit-mode">
+    </div>
+    <div class="data-row">
+      <span class="label">Date Joined</span>
+      <span class="value" id="pDateJoined_view">-</span>
     </div>
   </div>
 
@@ -104,7 +116,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
   import { getFirestore, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-  // 1. IMPORT AUTH
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
   const firebaseConfig = { 
@@ -118,47 +129,57 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app, "fobrealdbase");
-  const auth = getAuth(app); // 2. INITIALIZE AUTH
+  const auth = getAuth(app);
 
   const urlParams = new URLSearchParams(window.location.search);
   const rawId = urlParams.get('id');
   const docId = rawId ? rawId.split('#')[0] : null;
 
-  // 3. AUTH PROTECTOR: This waits for the user to be logged in
   onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log("Authenticated as:", user.email);
-      loadProfile();
-    } else {
-      console.warn("No user logged in. Redirecting...");
-      document.getElementById('pName_view').textContent = "Unauthorized Access";
-      // Uncomment the line below to redirect users who aren't logged in
-      // window.location.href = "login.html"; 
-    }
+    if (user) { loadProfile(); } 
+    else { document.getElementById('pName_view').textContent = "Unauthorized Access"; }
   });
 
   async function loadProfile() {
     if (!docId) return;
     try {
-        const docRef = doc(db, "members", docId);
-        const docSnap = await getDoc(docRef);
+        const docSnap = await getDoc(doc(db, "members", docId));
 
         if (docSnap.exists()) {
             const d = docSnap.data();
             
-            // Set UI elements
-            const fullName = `${(d.first_name || '').trim()} ${(d.last_name || '').trim()}`;
+            // 1. Handling Photo vs Initial
+            if (d.photo_url) {
+                const imgEl = document.getElementById('pPhoto_img');
+                imgEl.src = d.photo_url;
+                imgEl.style.display = "block";
+                document.getElementById('avatar-initial').style.display = "none";
+            } else {
+                document.getElementById('avatar-initial').textContent = d.first_name ? d.first_name[0].toUpperCase() : "?";
+            }
+
+            // 2. Name and Status
+            const fullName = `${(d.first_name || '')} ${(d.last_name || '')}`.trim();
             document.getElementById('pName_view').textContent = fullName || "Unnamed Member";
-            document.getElementById('avatar-initial').textContent = d.first_name ? d.first_name.trim()[0].toUpperCase() : "?";
-            
             document.getElementById('pStatus_view').textContent = d.status || "-";
+
+            // 3. Gender and Personal Info
             document.getElementById('pGender_view').textContent = d.gender || "-";
             document.getElementById('pBirthday_view').textContent = d.dob || "-";
             document.getElementById('pPhone_view').textContent = d.phone || "-";
             document.getElementById('pHostel_view').textContent = d.hostel || "-";
+            
+            // 4. Academic Info
             document.getElementById('pCourse_view').textContent = d.course || "-";
             document.getElementById('pLevel_view').textContent = d.level || "-";
-            
+
+            // 5. Date Joined (Timestamp conversion to GMT Date)
+            if (d.timestamp) {
+                const dateJoined = new Date(d.timestamp);
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                document.getElementById('pDateJoined_view').textContent = dateJoined.toLocaleDateString('en-GB', options);
+            }
+
             // Pre-fill edit inputs
             document.getElementById('pFirstName_edit').value = d.first_name || "";
             document.getElementById('pLastName_edit').value = d.last_name || "";
@@ -171,17 +192,14 @@
             document.getElementById('pLevel_edit').value = d.level || "";
 
             if(d.phone) document.getElementById('callLink').href = `tel:${d.phone}`;
-        } else {
-            document.getElementById('pName_view').textContent = "Member Not Found";
         }
     } catch (err) { 
-        console.error("Detailed Firebase Error:", err);
-        // This usually triggers if rules block the read
-        document.getElementById('pName_view').textContent = "Access Denied"; 
+        console.error(err);
+        document.getElementById('pName_view').textContent = "Error Loading"; 
     }
   }
 
-  // Toggle Edit Logic
+  // Toggle Edit
   document.getElementById('toggleEdit').addEventListener('click', () => {
     const isEditing = document.getElementById('saveBtn').style.display === "block";
     document.querySelectorAll('.value').forEach(el => el.style.display = isEditing ? "block" : "none");
