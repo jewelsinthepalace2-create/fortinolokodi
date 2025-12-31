@@ -103,125 +103,118 @@
 
   <div class="form-group">
     <div class="section-label">Identity</div>
-    <input type="text" id="mName" placeholder="Full Name" required>
+    <input type="text" id="mSurname" placeholder="Surname (Last Name)" required>
+    <div class="row">
+        <input type="text" id="mFirstname" placeholder="First Name" required>
+        <input type="text" id="mOthername" placeholder="Other Names (Optional)">
+    </div>
     
     <div class="row">
-      <select id="mGender">
-        <option value="" disabled selected>Select Gender</option>
+      <select id="mGender" required>
+        <option value="" disabled selected>Gender</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
       </select>
-      <input type="text" id="mBirthday" placeholder="Birthday (DD/MM)">
+      <div style="flex: 1.5;">
+        <label style="font-size: 0.6rem; color: #888; margin-left: 5px;">Date of Birth (GMT)</label>
+        <input type="date" id="mBirthday" onchange="calculateAge()">
+      </div>
     </div>
+    <p id="ageDisplay" style="font-size: 0.75rem; color: var(--primary); margin-top: -5px; margin-left: 5px;"></p>
 
-    <div class="section-label">Contact & Care</div>
-    <input type="tel" id="mPhone" placeholder="Phone Number">
-    <input type="text" id="mHostel" placeholder="Hostel / Residential Level">
+    <div class="section-label">Unique Contact</div>
+    <input type="tel" id="mPhone" placeholder="Ghana Phone (0XX...)">
+    <div id="phoneErr" class="error-text" style="color:#ff6b6b; font-size: 0.75rem; display:none;">Invalid Number or Already Exists</div>
+    <input type="text" id="mHostel" placeholder="Hostel / Residential Address">
+
+    <div class="section-label">Education & Status</div>
+    <input type="text" id="mCourse" placeholder="Course of Study">
+    <select id="mLevel">
+        <option value="" selected disabled>Education Level</option>
+        <option value="Level 100">Level 100</option>
+        <option value="Level 200">Level 200</option>
+        <option value="Level 300">Level 300</option>
+        <option value="Level 400">Level 400</option>
+        <option value="Alumnus">Alumnus</option>
+        <option value="Non-Student">Non-Student</option>
+    </select>
 
     <div class="row">
-      <select id="mDept">
-        <option value="None" selected>Department: None</option>
-        <option value="Choir">Choir</option>
-        <option value="Media">Media</option>
-        <option value="Ushering">Ushering</option>
-        <option value="Protocol">Protocol</option>
-        <option value="Children">Children Ministry</option>
-      </select>
       <select id="mStatus">
         <option value="New Convert">New Convert</option>
-        <option value="Regular Member">Regular Member</option>
-        <option value="Worker">Worker</option>
+        <option value="Established Member">Established Member</option>
       </select>
     </div>
 
-    <div class="section-label">Records</div>
-    <input type="date" id="mDateJoined" title="Date Joined">
-
     <div class="section-label">Emergency</div>
-    <input type="text" id="mEmergencyName" placeholder="Emergency Contact Name">
-    <input type="tel" id="mEmergencyPhone" placeholder="Emergency Contact Phone">
-
-    <textarea id="mNotes" placeholder="Additional spiritual notes..." rows="3"></textarea>
+    <input type="text" id="mEmergencyName" placeholder="Next of Kin Name">
+    <input type="tel" id="mEmergencyPhone" placeholder="Next of Kin Phone">
   </div>
 
-  <button id="saveBtn" disabled>Loading...</button>
+  <button id="saveBtn" disabled>Checking Permissions...</button>
   <p id="msg"></p>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { initializeFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  // ... [Import statements and Firebase Config as before] ...
+  import { query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
-    authDomain: "fob-database-139d1.firebaseapp.com",
-    projectId: "fob-database-139d1",
-    storageBucket: "fob-database-139d1.firebasestorage.app",
-    messagingSenderId: "375165731354",
-    appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
+  // AGE CALCULATION LOGIC
+  window.calculateAge = () => {
+    const dob = document.getElementById('mBirthday').value;
+    if(!dob) return;
+    const birthDate = new Date(dob);
+    const today = new Date(); // Browser uses local time, Ghana is GMT+0
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) { age--; }
+    document.getElementById('ageDisplay').innerText = `Calculated Age: ${age} years`;
+    return age;
   };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
-
-  let pId = null, sId = null, role = null;
-
-  onAuthStateChanged(auth, async (u) => {
-    if (u) {
-      const roleDisplay = document.getElementById('roleDisplay');
-      const btn = document.getElementById('saveBtn');
-      
-      let s = await getDoc(doc(db, "pastors", u.uid));
-      if (s.exists()) {
-        role = "pastor"; pId = u.uid; sId = "direct_entry";
-      } else {
-        s = await getDoc(doc(db, "shepherds", u.uid));
-        if (s.exists()) {
-          role = "shepherd"; pId = s.data().assigned_pastor_id; sId = u.uid;
-        }
-      }
-
-      if (role) {
-        roleDisplay.textContent = `Logged in as ${role.toUpperCase()}`;
-        btn.disabled = false; btn.textContent = "Save Member Record";
-      } else {
-        roleDisplay.textContent = "Error: Access Denied";
-      }
-    } else { window.location.href = "../index.html"; }
-  });
-
+  // SAVE BUTTON LOGIC WITH DUPLICATE CHECK
   document.getElementById('saveBtn').addEventListener('click', async () => {
+    const phone = document.getElementById('mPhone').value;
     const btn = document.getElementById('saveBtn');
+    
+    // 1. Unique Phone Index Check
+    const q = query(collection(db, "members"), where("phone", "==", phone));
+    const querySnapshot = await getDocs(q);
+    
+    if (!querySnapshot.empty) {
+        alert("This phone number is already registered to another member!");
+        return;
+    }
+
     btn.disabled = true; btn.textContent = "Saving...";
     
     try {
+      const birthDate = document.getElementById('mBirthday').value;
+      const birthMonthDay = birthDate ? birthDate.substring(5) : null; // MM-DD format for easy GMT matching
+
       await addDoc(collection(db, "members"), {
-        full_name: document.getElementById('mName').value,
+        last_name: document.getElementById('mSurname').value,
+        first_name: document.getElementById('mFirstname').value,
+        other_names: document.getElementById('mOthername').value,
         gender: document.getElementById('mGender').value,
-        birthday: document.getElementById('mBirthday').value,
-        phone: document.getElementById('mPhone').value,
-        hostel_level: document.getElementById('mHostel').value,
-        department: document.getElementById('mDept').value,
+        dob: birthDate,
+        dob_day_month: birthMonthDay, // Crucial for GMT birthday alerts
+        phone: phone,
+        level: document.getElementById('mLevel').value,
+        course: document.getElementById('mCourse').value,
         status: document.getElementById('mStatus').value,
-        date_joined: document.getElementById('mDateJoined').value,
-        emergency_contact_name: document.getElementById('mEmergencyName').value,
-        emergency_contact_phone: document.getElementById('mEmergencyPhone').value,
-        notes: document.getElementById('mNotes').value,
-        pastorId: pId,
+        recorded_by_id: auth.currentUser.uid,
+        pastorId: pId, // From your auth logic
         shepherdId: sId,
-        serverTimestamp: new Date()
+        timestamp: new Date().toISOString() // Stored in ISO string (UTC/GMT)
       });
 
-      document.getElementById('msg').style.color = "#4facfe";
-      document.getElementById('msg').textContent = "Saved Successfully!";
-      document.querySelectorAll('input, select, textarea').forEach(el => el.value = "");
+      alert("Member added successfully!");
+      location.reload();
     } catch (e) {
-      document.getElementById('msg').style.color = "#ff6b6b";
-      document.getElementById('msg').textContent = "Error: " + e.message;
+      alert("Error: " + e.message);
+      btn.disabled = false;
     }
-    btn.disabled = false; btn.textContent = "Save Member Record";
   });
 </script>
 </body>
