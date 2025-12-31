@@ -169,18 +169,25 @@
     container.appendChild(h);
   }
 
-  function renderMemberCard(container, member) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = () => window.location.href = `profile.html?id=${member.id}`;
-    card.innerHTML = `
-        <div>
-          <h3 style="font-size:1rem;">${member.full_name}</h3>
-          <span class="status">${member.status}</span>
-        </div>
-        <div style="opacity:0.3">›</div>`;
-    container.appendChild(card);
-  }
+ function renderMemberCard(container, member) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.onclick = () => window.location.href = `profile.html?id=${member.id}`;
+  
+  // Combine names safely (handling cases where a field might be missing)
+  const firstName = member.first_name || "";
+  const lastName = member.last_name || "";
+  const otherName = member.other_names ? ` ${member.other_names}` : "";
+  const displayName = `${firstName}${otherName} ${lastName}`.trim() || "Unknown Member";
+
+  card.innerHTML = `
+      <div>
+        <h3 style="font-size:1rem;">${displayName}</h3>
+        <span class="status">${member.status || 'No Status'}</span>
+      </div>
+      <div style="opacity:0.3">›</div>`;
+  container.appendChild(card);
+}
 
   onAuthStateChanged(auth, (user) => {
     if (user) startApp(user);
