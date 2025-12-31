@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShepherdNet | Secure Login</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #4facfe;
       --secondary: #00f2fe;
-      --glass: rgba(15, 23, 42, 0.65);
-      --border: rgba(255, 255, 255, 0.15);
+      --glass: rgba(10, 15, 30, 0.85);
+      --border: rgba(255, 255, 255, 0.1);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -21,22 +22,25 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      /* Using a professional stock image of a shepherd/pasture */
-      background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
-                  url('https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=1920&q=80');
+      background: linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), 
+                  url('https://images.unsplash.com/photo-1483344331401-496695304627?auto=format&fit=crop&w=1920&q=80');
       background-size: cover;
       background-position: center;
       color: white;
       overflow: hidden;
+      perspective: 1200px;
     }
 
     /* Scripture Section */
     #scripture-container {
-      max-width: 500px;
+      max-width: 600px;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
       padding: 0 20px;
-      min-height: 80px;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .scripture-text {
@@ -44,85 +48,133 @@
       font-weight: 300;
       font-size: 1.1rem;
       opacity: 0;
-      transition: opacity 1.5s ease;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      transition: opacity 1.2s ease;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+      line-height: 1.6;
     }
 
     .scripture-ref {
       display: block;
-      margin-top: 10px;
+      margin-top: 8px;
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       color: var(--primary);
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
     }
 
+    /* --- LOGO SECTION --- */
+    .logo-box {
+      width: 100px; /* Slightly larger for the custom logo */
+      height: 100px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 25px rgba(79, 172, 254, 0.3);
+      overflow: hidden; /* Ensures logo stays in circle */
+    }
+
+    .logo-box img {
+      width: 85%;
+      height: 85%;
+      object-fit: contain;
+      /* Subtle glow to help it pop against the dark glass */
+      filter: drop-shadow(0 0 8px rgba(79, 172, 254, 0.4));
+    }
+
+    /* Login Container */
     #login-container {
-      width: 90%;
+      width: 95%;
       max-width: 400px;
       padding: 40px;
       background: var(--glass);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
       border: 1px solid var(--border);
-      border-radius: 28px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border-radius: 35px;
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8);
+      transition: transform 0.15s ease-out;
       z-index: 10;
+      text-align: center;
     }
 
-    h2 { font-weight: 600; letter-spacing: 2px; margin-bottom: 5px; color: var(--primary); }
+    h2 { font-weight: 600; letter-spacing: 3px; margin-bottom: 5px; color: var(--primary); text-transform: uppercase; }
     p.subtitle { font-size: 0.8rem; color: #94a3b8; margin-bottom: 30px; }
 
-    .input-wrapper { position: relative; width: 100%; margin: 15px 0; }
+    .input-wrapper { position: relative; width: 100%; margin: 18px 0; }
 
     input {
       width: 100%;
-      padding: 14px 18px;
-      background: rgba(255, 255, 255, 0.05);
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 15px;
       color: white;
       outline: none;
       font-size: 1rem;
-      transition: all 0.3s;
+      transition: all 0.4s ease;
     }
 
-    input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.1); }
+    input:focus { 
+      border-color: var(--primary); 
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 20px rgba(79, 172, 254, 0.15);
+    }
 
     .toggle-password {
       position: absolute;
-      right: 18px;
+      right: 20px;
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
-      opacity: 0.6;
+      opacity: 0.4;
       transition: 0.3s;
     }
-
-    .toggle-password:hover { opacity: 1; }
 
     button#loginBtn {
       width: 100%;
-      padding: 15px;
-      margin-top: 10px;
+      height: 60px;
+      margin-top: 15px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
       color: #0f172a;
       border: none;
-      border-radius: 14px;
+      border-radius: 15px;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
-      transition: 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.4s;
     }
 
-    button#loginBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(79, 172, 254, 0.4); }
+    button#loginBtn:hover { 
+      transform: translateY(-3px); 
+      box-shadow: 0 15px 30px -5px rgba(79, 172, 254, 0.4); 
+    }
 
-    .footer-links { margin-top: 25px; font-size: 0.8rem; display: flex; justify-content: center; gap: 15px; }
-    .footer-links a { color: #94a3b8; text-decoration: none; transition: 0.3s; }
+    .loader {
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(15, 23, 42, 0.2);
+      border-radius: 50%;
+      border-top-color: #0f172a;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer-links { margin-top: 35px; font-size: 0.85rem; display: flex; justify-content: center; gap: 20px; }
+    .footer-links a { color: #64748b; text-decoration: none; transition: 0.3s; }
     .footer-links a:hover { color: white; }
 
-    .status-msg { margin-top: 15px; font-size: 0.8rem; color: #ff6b6b; min-height: 1.2rem; }
+    .status-msg { margin-top: 20px; font-size: 0.8rem; color: #ff6b6b; min-height: 1.2rem; }
   </style>
 </head>
 <body>
@@ -135,11 +187,15 @@
   </div>
 
   <div id="login-container">
+    <div class="logo-box">
+      <img src="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png" alt="ShepherdNet Logo">
+    </div>
+
     <h2>ShepherdNet</h2>
     <p class="subtitle">Secure Shepherd Management Portal</p>
     
     <div class="input-wrapper">
-        <input type="email" id="email" placeholder="Email Address">
+        <input type="email" id="email" placeholder="Email Address" spellcheck="false">
     </div>
     
     <div class="input-wrapper">
@@ -149,17 +205,21 @@
         </div>
     </div>
 
-    <button id="loginBtn">Secure Login</button>
+    <button id="loginBtn">
+        <span id="btnText">Secure Login</span>
+        <div class="loader" id="btnLoader"></div>
+    </button>
     <p id="status" class="status-msg"></p>
 
     <div class="footer-links">
         <a href="#" id="forgotPass">Forgot Password?</a>
         <span>•</span>
-        <a href="mailto:admin@fob.com">Support</a>
+        <a href="mailto:jewelsinthepalace2@gmail.com">Support</a>
     </div>
   </div>
 
 <script type="module">
+  // FIREBASE INITIALIZATION
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
   import { initializeFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
@@ -177,12 +237,21 @@
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
 
-  // --- Scripture Engine ---
+  // Tilt Effect Logic
+  const container = document.getElementById('login-container');
+  document.addEventListener('mousemove', (e) => {
+    const x = (window.innerWidth / 2 - e.pageX) / 60;
+    const y = (window.innerHeight / 2 - e.pageY) / 60;
+    container.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+  });
+
+  // Scripture Engine
   const scriptures = [
+    { text: "Greater love has no man than this, that a man lay down his life for his friends.", ref: "John 15:13" },
+    { text: "He that winneth souls is wise.", ref: "Proverbs 11:30" },
     { text: "The LORD is my shepherd; I shall not want.", ref: "Psalm 23:1" },
-    { text: "I am the good shepherd. The good shepherd lays down his life for the sheep.", ref: "John 10:11" },
-    { text: "He tends his flock like a shepherd: He gathers the lambs in his arms.", ref: "Isaiah 40:11" },
-    { text: "Be shepherds of God’s flock that is under your care, watching over them.", ref: "1 Peter 5:2" }
+    { text: "I am the good shepherd: the good shepherd giveth his life for the sheep.", ref: "John 10:11" },
+    { text: "Feed the flock of God which is among you, taking the oversight thereof.", ref: "1 Peter 5:2" }
   ];
 
   let currentIdx = 0;
@@ -196,26 +265,35 @@
       sRef.textContent = scriptures[currentIdx].ref;
       sText.style.opacity = 1;
       currentIdx = (currentIdx + 1) % scriptures.length;
-    }, 1500);
+    }, 1200);
   }
   updateScripture();
-  setInterval(updateScripture, 10000);
+  setInterval(updateScripture, 11000);
 
-  // --- Password UI Logic ---
+  // Password Visibility Logic
   const passwordInput = document.getElementById('password');
   const toggleBtn = document.getElementById('togglePassword');
   const eyeIcon = document.getElementById('eyeIcon');
+  let hideTimeout;
 
   toggleBtn.addEventListener('click', () => {
     const isPass = passwordInput.type === 'password';
     passwordInput.type = isPass ? 'text' : 'password';
-    // Update icon appearance
     eyeIcon.style.color = isPass ? '#4facfe' : 'currentColor';
+    if (isPass) {
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
+            passwordInput.type = 'password';
+            eyeIcon.style.color = 'currentColor';
+        }, 7000);
+    }
   });
 
-  // --- Authentication Logic ---
-  const statusEl = document.getElementById('status');
+  // Login Logic
   const loginBtn = document.getElementById('loginBtn');
+  const btnText = document.getElementById('btnText');
+  const btnLoader = document.getElementById('btnLoader');
+  const statusEl = document.getElementById('status');
 
   async function findUserRole(uid) {
     const collections = ['master_admin', 'pastors', 'shepherds', 'members'];
@@ -223,7 +301,7 @@
       try {
         const snap = await getDoc(doc(db, col, uid));
         if (snap.exists()) return snap.data().role;
-      } catch (e) { console.error(e); }
+      } catch (e) { }
     }
     return null;
   }
@@ -233,20 +311,22 @@
     const password = passwordInput.value;
 
     if (!email || !password) {
-      statusEl.textContent = "Credential fields required.";
+      statusEl.textContent = "Credential fields are required.";
       return;
     }
 
     loginBtn.disabled = true;
-    loginBtn.textContent = "Connecting...";
-    
+    btnText.style.display = 'none';
+    btnLoader.style.display = 'block';
+    statusEl.textContent = "";
+
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       statusEl.style.color = "#4facfe";
       statusEl.textContent = "Synchronizing account...";
       
       const role = await findUserRole(cred.user.uid);
-      if (!role) throw new Error("Account profile not found.");
+      if (!role) throw new Error("User profile not found.");
 
       const routes = {
         "master_admin": "admin/index.html", "pastor": "pastor/index.html",
@@ -254,27 +334,27 @@
       };
 
       if (routes[role]) window.location.href = routes[role];
-      else throw new Error("Unauthorized access level.");
+      else throw new Error("Unauthorized role.");
 
     } catch (err) {
       statusEl.style.color = "#ff6b6b";
-      statusEl.textContent = "Authentication failed. Check credentials.";
+      statusEl.textContent = "Login failed. Check your credentials.";
       loginBtn.disabled = false;
-      loginBtn.textContent = "Secure Login";
+      btnText.style.display = 'block';
+      btnLoader.style.display = 'none';
     }
   });
 
-  // --- Forgot Password ---
   document.getElementById('forgotPass').addEventListener('click', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value.trim();
     if (!email) {
-      statusEl.textContent = "Enter your email first to reset password.";
+      statusEl.textContent = "Please enter your email first.";
       return;
     }
     try {
       await sendPasswordResetEmail(auth, email);
-      alert("Reset link sent to your email!");
+      alert("Password reset email sent.");
     } catch (err) {
       alert("Error: " + err.message);
     }
