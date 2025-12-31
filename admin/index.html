@@ -120,7 +120,8 @@
 
         // --- STEP 1: LOAD PROFILE (PRIORITY) ---
         try {
-            const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
+           // NEW CODE (Correct collection)
+              const adminSnap = await getDoc(doc(db, "pastors", user.uid));
             if (adminSnap.exists()) {
                 const data = adminSnap.data();
                 const fullName = data.full_name || "Admin";
