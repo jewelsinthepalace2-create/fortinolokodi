@@ -12,9 +12,8 @@
     :root {
       --primary: #4facfe;
       --secondary: #00f2fe;
-      /* Darker, more mysterious glass for the starfield background */
-      --glass: rgba(5, 10, 25, 0.88);
-      --border: rgba(255, 255, 255, 0.12);
+      --glass: rgba(10, 15, 30, 0.85);
+      --border: rgba(255, 255, 255, 0.15);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
@@ -25,31 +24,24 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      /* ABRAHAM'S STARFIELD BACKGROUND */
-      background: linear-gradient(rgba(2, 6, 23, 0.8), rgba(2, 6, 23, 0.8)), 
-                  url('https://images.unsplash.com/photo-1506318137071-a8e063b4bc3c?auto=format&fit=crop&w=1920&q=80');
-      background-size: cover;
+      /* COMBINED BACKGROUND: SHEPHERD IMAGE + STAR OVERLAY */
+      background: 
+        linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), 
+        url('https://www.transparenttextures.com/patterns/stardust.png'), /* Starry texture */
+        url('https://images.unsplash.com/photo-1516466723877-e4ec1d736c8a?auto=format&fit=crop&w=1920&q=80'); /* Your Shepherd Image */
+      background-size: cover, auto, cover;
       background-position: center;
       color: white;
       overflow: hidden;
       perspective: 1200px;
     }
 
-    /* Subtle background twinkle effect */
-    body::before {
-      content: "";
+    /* Shooting Star Animation Layer */
+    .star-layer {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: url('https://www.transparenttextures.com/patterns/stardust.png');
-      opacity: 0.3;
-      animation: twinkle 10s linear infinite;
       pointer-events: none;
-    }
-
-    @keyframes twinkle {
-      0% { opacity: 0.2; }
-      50% { opacity: 0.5; }
-      100% { opacity: 0.2; }
+      z-index: 1;
     }
 
     /* Scripture Section */
@@ -71,7 +63,7 @@
       font-size: 1.1rem;
       opacity: 0;
       transition: opacity 1.2s ease;
-      text-shadow: 0 0 20px rgba(79, 172, 254, 0.5);
+      text-shadow: 0 0 15px rgba(79, 172, 254, 0.4);
       line-height: 1.6;
     }
 
@@ -89,7 +81,7 @@
     .logo-box {
       width: 100px;
       height: 100px;
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
       border-radius: 50%;
       margin: 0 auto 20px;
@@ -97,22 +89,21 @@
       align-items: center;
       justify-content: center;
       backdrop-filter: blur(10px);
-      box-shadow: 0 0 30px rgba(79, 172, 254, 0.25);
+      box-shadow: 0 0 30px rgba(79, 172, 254, 0.3);
       overflow: hidden;
-      animation: logo-pulse 5s infinite ease-in-out;
+      animation: logo-pulse 4s infinite ease-in-out;
     }
 
     @keyframes logo-pulse {
-      0% { transform: scale(1); box-shadow: 0 0 20px rgba(79, 172, 254, 0.2); }
-      50% { transform: scale(1.08); box-shadow: 0 0 50px rgba(79, 172, 254, 0.5); }
-      100% { transform: scale(1); box-shadow: 0 0 20px rgba(79, 172, 254, 0.2); }
+      0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(79, 172, 254, 0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 0 45px rgba(79, 172, 254, 0.6); }
     }
 
     .logo-box img {
-      width: 85%;
-      height: 85%;
+      width: 80%;
+      height: 80%;
       object-fit: contain;
-      filter: drop-shadow(0 0 10px rgba(79, 172, 254, 0.6));
+      filter: drop-shadow(0 0 10px rgba(79, 172, 254, 0.7));
     }
 
     /* Login Container */
@@ -124,24 +115,24 @@
       backdrop-filter: blur(30px);
       -webkit-backdrop-filter: blur(30px);
       border: 1px solid var(--border);
-      border-radius: 40px;
-      box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.9);
+      border-radius: 35px;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9);
       transition: transform 0.2s ease-out;
       z-index: 10;
       text-align: center;
     }
 
     h2 { font-weight: 600; letter-spacing: 4px; margin-bottom: 5px; color: var(--primary); text-transform: uppercase; }
-    p.subtitle { font-size: 0.75rem; color: #64748b; margin-bottom: 30px; letter-spacing: 1px; }
+    p.subtitle { font-size: 0.75rem; color: #94a3b8; margin-bottom: 30px; letter-spacing: 1px; }
 
     .input-wrapper { position: relative; width: 100%; margin: 20px 0; }
 
     input {
       width: 100%;
       padding: 16px 20px;
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 15px;
       color: white;
       outline: none;
       font-size: 1rem;
@@ -150,8 +141,8 @@
 
     input:focus { 
       border-color: var(--primary); 
-      background: rgba(255, 255, 255, 0.06);
-      box-shadow: 0 0 25px rgba(79, 172, 254, 0.15);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
     }
 
     .toggle-password {
@@ -160,8 +151,7 @@
       top: 50%;
       transform: translateY(-50%);
       cursor: pointer;
-      opacity: 0.4;
-      transition: 0.3s;
+      opacity: 0.5;
     }
 
     button#loginBtn {
@@ -169,9 +159,9 @@
       height: 60px;
       margin-top: 15px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: #020617;
+      color: #0f172a;
       border: none;
-      border-radius: 18px;
+      border-radius: 15px;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
@@ -183,29 +173,31 @@
 
     button#loginBtn:hover { 
       transform: translateY(-3px); 
-      box-shadow: 0 20px 40px -10px rgba(79, 172, 254, 0.5); 
+      box-shadow: 0 15px 35px -5px rgba(79, 172, 254, 0.5); 
     }
 
     .loader {
       width: 22px;
       height: 22px;
-      border: 3px solid rgba(2, 6, 23, 0.2);
+      border: 3px solid rgba(15, 23, 42, 0.2);
       border-radius: 50%;
-      border-top-color: #020617;
+      border-top-color: #0f172a;
       animation: spin 0.8s linear infinite;
       display: none;
     }
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .footer-links { margin-top: 35px; font-size: 0.8rem; display: flex; justify-content: center; gap: 20px; }
-    .footer-links a { color: #475569; text-decoration: none; transition: 0.3s; }
-    .footer-links a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+    .footer-links { margin-top: 35px; font-size: 0.85rem; display: flex; justify-content: center; gap: 20px; }
+    .footer-links a { color: #64748b; text-decoration: none; transition: 0.3s; }
+    .footer-links a:hover { color: white; text-shadow: 0 0 10px white; }
 
     .status-msg { margin-top: 20px; font-size: 0.8rem; color: #ff6b6b; min-height: 1.2rem; }
   </style>
 </head>
 <body>
+
+  <div class="star-layer"></div>
 
   <div id="scripture-container">
     <div id="scripture-box">
@@ -272,7 +264,7 @@
     container.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
   });
 
-  // Scripture Engine - Including the Abraham Promise
+  // Scripture Engine
   const scriptures = [
     { text: "Look now toward heaven, and tell the stars, if thou be able to number them.", ref: "Genesis 15:5" },
     { text: "Greater love has no man than this, that a man lay down his life for his friends.", ref: "John 15:13" },
@@ -358,7 +350,7 @@
   document.getElementById('togglePassword').addEventListener('click', function() {
     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
     passwordInput.setAttribute('type', type);
-    this.style.opacity = type === 'text' ? '1' : '0.4';
+    this.style.opacity = type === 'text' ? '1' : '0.5';
   });
 
   // Forgot Password
