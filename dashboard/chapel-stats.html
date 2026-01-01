@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Performance | ShepherdNet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
+        body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .back-btn { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
+        .performance-card { background: var(--glass); border: 1px solid var(--border); padding: 20px; border-radius: 20px; margin-top: 20px; }
+        .shepherd-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border); }
+        .maturity-tag { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">← Back to Dashboard</a>
+        <h1 style="margin-top:20px">Chapel Performance</h1>
+        
+        <div class="performance-card">
+            <h3>Maturity Distribution</h3>
+            <canvas id="pastorMaturityChart" style="max-height: 250px;"></canvas>
+        </div>
+
+        <div class="performance-card">
+            <h3>Shepherd Breakdown</h3>
+            <div id="shepherdList">
+                <p style="opacity:0.5; text-align:center; padding:20px;">Loading hierarchy...</p>
+            </div>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    const firebaseConfig = { /* Use your config here */ };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "fobrealdbase");
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
+
+        // 1. Get Shepherds
+        const sSnap = await getDocs(query(collection(db, "shepherds"), where("assigned_pastor_id", "==", user.uid)));
+        const shepherdMap = {};
+        sSnap.forEach(doc => {
+            shepherdMap[doc.id] = { name: doc.data().full_name, count: 0 };
+        });
+
+        // 2. Get Members
+        const mSnap = await getDocs(query(collection(db, "members"), where("pastorId", "==", user.uid)));
+        let established = 0;
+        let converts = 0;
+        let unassignedCount = 0;
+
+        mSnap.forEach(doc => {
+            const m = doc.data();
+            if (m.status === "Established Member") established++; else converts++;
+
+            if (m.shepherdId && shepherdMap[m.shepherdId]) {
+                shepherdMap[m.shepherdId].count++;
+            } else {
+                unassignedCount++;
+            }
+        });
+
+        // 3. Render Chart
+        new Chart(document.getElementById('pastorMaturityChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Established', 'New Converts'],
+                datasets: [{ data: [established, converts], backgroundColor: ['#00ff88', '#ff4b5c'] }]
+            }
+        });
+
+        // 4. Render Shepherd List
+        const listDiv = document.getElementById('shepherdList');
+        listDiv.innerHTML = `<div class="shepherd-row"><span><b>Directly under Pastor</b></span><span>${unassignedCount} Members</span></div>`;
+        
+        Object.values(shepherdMap).forEach(s => {
+            listDiv.innerHTML += `
+                <div class="shepherd-row">
+                    <span>${s.name}</span>
+                    <span>${s.count} Members</span>
+                </div>
+            `;
+        });
+    });
+</script>
+</body>
+</html>
