@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Event | ShepherdNet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
+        body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .card { background: var(--glass); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 100%; max-width: 400px; }
+        h2 { color: var(--primary); margin-bottom: 20px; text-align: center; }
+        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; outline: none; }
+        button { background: var(--primary); color: #0f172a; font-weight: 600; cursor: pointer; border: none; margin-top: 20px; }
+        .back-link { display: block; text-align: center; color: var(--primary); text-decoration: none; font-size: 0.8rem; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>New Service/Event</h2>
+    <input type="text" id="eventName" placeholder="Event Name (e.g. Sunday Service)">
+    <input type="date" id="eventDate">
+    <select id="eventCategory">
+        <option value="Sunday Service">Sunday Service</option>
+        <option value="Mid-Week">Mid-Week Service</option>
+        <option value="Special Event">Special Event</option>
+    </select>
+    <button id="saveEvent">Create Event</button>
+    <a href="index.html" class="back-link">← Back to Registry</a>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
+        authDomain: "fob-database-139d1.firebaseapp.com",
+        projectId: "fob-database-139d1",
+        storageBucket: "fob-database-139d1.firebasestorage.app",
+        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app, "fobrealdbase");
+
+    document.getElementById('saveEvent').onclick = async () => {
+        const name = document.getElementById('eventName').value;
+        const date = document.getElementById('eventDate').value;
+        const category = document.getElementById('eventCategory').value;
+
+        if(!name || !date) return alert("Please fill all fields");
+
+        try {
+            await addDoc(collection(db, "events"), {
+                name: name,
+                date: date,
+                category: category,
+                timestamp: new Date()
+            });
+            alert("Event Created! Check the Registry for new dots.");
+            window.location.href = "index.html";
+        } catch (e) { alert(e.message); }
+    };
+</script>
+</body>
+</html>
