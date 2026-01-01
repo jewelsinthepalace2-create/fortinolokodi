@@ -190,13 +190,30 @@
     const snaps = await getDocs(q);
     list.innerHTML = "";
     
+    // Create a cache so we don't fetch the same pastor/shepherd twice
+    const nameCache = {};
+
     for (const m of snaps.docs) {
         const data = m.data();
-        let addedBy = "Unknown";
-        
-        // Logical check: Find who added them
-        if (data.shepherdName) addedBy = `Shepherd: ${data.shepherdName}`;
-        else if (data.pastorName) addedBy = `Pastor: ${data.pastorName}`;
+        let addedBy = "Staff";
+
+        // 1. Try to use names already on the member document
+        if (data.shepherdName) {
+            addedBy = `Shepherd: ${data.shepherdName}`;
+        } else if (data.pastorName) {
+            addedBy = `Pastor: ${data.pastorName}`;
+        } 
+        // 2. FALLBACK: If names are missing, look them up using IDs
+        else if (data.shepherdId || data.pastorId) {
+            const role = data.shepherdId ? "shepherds" : "pastors";
+            const id = data.shepherdId || data.pastorId;
+
+            if (!nameCache[id]) {
+                const userSnap = await getDoc(doc(db, role, id));
+                nameCache[id] = userSnap.exists() ? userSnap.data().full_name : "Unknown User";
+            }
+            addedBy = `${role === 'shepherds' ? 'Shepherd' : 'Pastor'}: ${nameCache[id]}`;
+        }
 
         renderMemberTab(list, { id: m.id, ...data }, addedBy);
     }
