@@ -9,81 +9,102 @@
         :root { 
             --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); 
             --border: rgba(255, 255, 255, 0.1); --text: #ffffff; --text-dim: rgba(255, 255, 255, 0.5);
-            --green: #00ff88;
+            --green: #00ff88; --red: #ff4b5c; --sidebar-w: 260px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; min-height: 100vh; padding: 20px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; }
 
-        .container { max-width: 600px; margin: 0 auto; padding-bottom: 100px; }
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed; top: 0; left: calc(-1 * var(--sidebar-w));
+            width: var(--sidebar-w); height: 100%;
+            background: #111827; border-right: 1px solid var(--border);
+            z-index: 1000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 30px 20px;
+        }
+        .sidebar.open { left: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
         
-        header { margin-bottom: 30px; text-align: left; }
-        h1 { font-size: 1.5rem; font-weight: 600; }
-        #roleInfo { font-size: 0.8rem; color: var(--primary); opacity: 0.8; }
+        .nav-item {
+            display: block; padding: 15px; color: white; text-decoration: none;
+            border-radius: 12px; margin-bottom: 10px; transition: 0.2s;
+            font-weight: 400; font-size: 0.95rem;
+        }
+        .nav-item:hover { background: var(--glass); color: var(--primary); }
+        .nav-item.active { background: var(--primary); color: #0f172a; font-weight: 600; }
 
-        /* Member Card as a Link */
+        /* Overlay */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            display: none; z-index: 900;
+        }
+        .overlay.show { display: block; }
+
+        /* Main Content */
+        .main-content { padding: 20px; transition: 0.3s; width: 100%; max-width: 600px; margin: 0 auto; }
+        
+        /* Navbar */
+        .navbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .menu-btn { background: var(--glass); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 10px; cursor: pointer; }
+
+        /* Member Cards */
         .member-link { text-decoration: none; color: inherit; display: block; margin-bottom: 15px; }
-
         .member-card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--border);
+            border-radius: 18px; padding: 20px; display: flex; justify-content: space-between;
+            align-items: center; transition: 0.3s;
         }
-        .member-link:hover .member-card { border-color: var(--primary); transform: translateY(-3px); background: rgba(255,255,255,0.08); }
-
-        .name-box { font-weight: 600; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; }
-        .sub-text { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+        .member-card.alert-danger { border-color: var(--red); animation: pulse-red 2s infinite; }
         
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0px rgba(255, 75, 92, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(255, 75, 92, 0.4); }
+        }
+
         .streak-container { display: flex; gap: 8px; margin-top: 12px; }
-        .dot {
-            width: 14px; height: 14px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--border);
-            cursor: pointer; transition: 0.3s;
-            position: relative; z-index: 10; /* Ensures dot stays above the card link */
-        }
-        .dot.present { 
-            background: var(--green); 
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.4); 
-            border: none; 
-        }
+        .dot { width: 14px; height: 14px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border); cursor: pointer; }
+        .dot.present { background: var(--green); border: none; box-shadow: 0 0 8px var(--green); }
+        .dot.absent { background: var(--red); border: none; box-shadow: 0 0 8px var(--red); }
 
         .fab {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 60px; height: 60px; background: var(--primary);
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            color: #0f172a; font-size: 24px; text-decoration: none; font-weight: bold;
-            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
-            z-index: 100;
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background: var(--primary); border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; color: #0f172a; font-size: 24px; text-decoration: none;
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3); z-index: 100;
         }
-
-        .loading-spinner { text-align: center; padding: 50px; color: var(--text-dim); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1 id="headerTitle">Registry</h1>
-        <p id="roleInfo">Authenticating...</p>
-    </header>
+<div class="sidebar" id="sidebar">
+    <h2 style="margin-bottom: 30px; color: var(--primary);">ShepherdNet</h2>
+    <a href="#" class="nav-item active">Registry</a>
+    <a href="" id="dashLink" class="nav-item">Dashboard</a>
+    <a href="../settings.html" class="nav-item">Settings</a>
+    <hr style="opacity: 0.1; margin: 20px 0;">
+    <a href="#" onclick="logout()" class="nav-item" style="color: var(--red);">Logout</a>
+</div>
 
-    <div id="memberList">
-        <div class="loading-spinner">Fetching souls...</div>
-    </div>
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+<div class="main-content">
+    <nav class="navbar">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div style="text-align: right;">
+            <h1 style="font-size: 1.2rem;">Registry</h1>
+            <p id="roleInfo" style="font-size: 0.7rem; opacity: 0.6;">Loading...</p>
+        </div>
+    </nav>
+
+    <div id="memberList"></div>
 </div>
 
 <a href="../dashboard/add-member.html" class="fab">+</a>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
     import { getFirestore, collection, query, where, getDocs, getDoc, doc, orderBy, limit, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
     const firebaseConfig = { 
@@ -98,119 +119,96 @@
     const auth = getAuth(app);
     const db = getFirestore(app, "fobrealdbase");
 
+    // Sidebar Toggle Logic
+    window.toggleMenu = () => {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('overlay').classList.toggle('show');
+    };
+
+    window.logout = () => signOut(auth).then(() => window.location.href = "../index.html");
+
     let latestEvents = [];
-    const nameCache = {};
 
     async function fetchLatestEvents() {
-        try {
-            const q = query(collection(db, "events"), orderBy("date", "desc"), limit(5));
-            const snap = await getDocs(q);
-            latestEvents = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
-        } catch (e) { console.error("Events error:", e); }
+        const todayStr = new Date().toISOString().split('T')[0];
+        const q = query(collection(db, "events"), where("date", "<=", todayStr), orderBy("date", "desc"), limit(5));
+        const snap = await getDocs(q);
+        latestEvents = snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
     }
-
-    async function getAddedByName(pastorId, shepherdId) {
-        let targetId = (shepherdId && shepherdId !== "direct_pastor_entry" && shepherdId !== "master_admin_entry") 
-                       ? shepherdId : pastorId;
-        
-        if (!targetId) return "Registry";
-        if (nameCache[targetId]) return nameCache[targetId];
-
-        const collections = ["master_admin", "pastors", "shepherds"];
-        for (const coll of collections) {
-            const userSnap = await getDoc(doc(db, coll, targetId));
-            if (userSnap.exists()) {
-                const label = coll === "shepherds" ? "Shep." : coll === "pastors" ? "Past." : "Admin";
-                nameCache[targetId] = `${label}: ${userSnap.data().full_name}`;
-                return nameCache[targetId];
-            }
-        }
-        return "Unknown User";
-    }
-
-    // Toggle Attendance with Propagation Stop
-    window.toggleAttendance = async (event, dot, memberId, eventId) => {
-        event.preventDefault(); 
-        event.stopPropagation(); // Stops the card link from opening
-
-        const attId = `${memberId}_${eventId}`;
-        const attRef = doc(db, "attendance", attId);
-
-        try {
-            if (dot.classList.contains('present')) {
-                await deleteDoc(attRef);
-                dot.classList.remove('present');
-            } else {
-                await setDoc(attRef, { 
-                    status: 'present', 
-                    timestamp: new Date(),
-                    memberId: memberId,
-                    eventId: eventId
-                });
-                dot.classList.add('present');
-            }
-        } catch (e) {
-            console.error("Attendance Error:", e);
-            alert("Permission denied or connection error.");
-        }
-    };
 
     async function loadRegistry(userQuery) {
         const listDiv = document.getElementById('memberList');
         const snaps = await getDocs(userQuery);
         listDiv.innerHTML = "";
 
-        if (snaps.empty) {
-            listDiv.innerHTML = "<p style='text-align:center; opacity:0.5; margin-top:50px;'>No members found in your flock.</p>";
-            return;
-        }
-
         for (const mDoc of snaps.docs) {
             const m = mDoc.data();
-            const addedBy = await getAddedByName(m.pastorId, m.shepherdId);
-            
-            // Generate Attendance Dots
+            let absentCount = 0;
             let dotsHtml = `<div class="streak-container">`;
+
             for (const ev of latestEvents) {
                 const attSnap = await getDoc(doc(db, "attendance", `${mDoc.id}_${ev.id}`));
-                dotsHtml += `<div class="dot ${attSnap.exists() ? 'present' : ''}" 
-                                  title="${ev.name} (${ev.date})" 
-                                  onclick="toggleAttendance(event, this, '${mDoc.id}', '${ev.id}')"></div>`;
+                let statusClass = "";
+                if (attSnap.exists()) {
+                    statusClass = attSnap.data().status;
+                    if (statusClass === 'absent') absentCount++;
+                } else { absentCount++; }
+                
+                dotsHtml += `<div class="dot ${statusClass}" onclick="toggleAttendance(event, this, '${mDoc.id}', '${ev.id}')"></div>`;
             }
             dotsHtml += `</div>`;
 
             listDiv.innerHTML += `
                 <a href="profile.html?id=${mDoc.id}" class="member-link">
-                    <div class="member-card">
+                    <div class="member-card ${absentCount >= 3 ? 'alert-danger' : ''}">
                         <div>
-                            <div class="name-box">${m.first_name} ${m.last_name}</div>
-                            <div class="sub-text">${addedBy}</div>
+                            <div style="font-weight:600;">${m.first_name} ${m.last_name}</div>
+                            <div style="font-size:0.7rem; opacity:0.5;">Tap to view profile</div>
                             ${dotsHtml}
                         </div>
-                        <div style="opacity:0.2; font-size:1.5rem">›</div>
+                        <div style="opacity:0.2;">›</div>
                     </div>
                 </a>`;
         }
     }
 
+    window.toggleAttendance = async (event, dot, memberId, eventId) => {
+        event.preventDefault(); event.stopPropagation();
+        const attRef = doc(db, "attendance", `${memberId}_${eventId}`);
+        if (!dot.classList.contains('present') && !dot.classList.contains('absent')) {
+            await setDoc(attRef, { status: 'present', memberId, eventId });
+            dot.className = 'dot present';
+        } else if (dot.classList.contains('present')) {
+            await setDoc(attRef, { status: 'absent', memberId, eventId });
+            dot.className = 'dot absent';
+        } else {
+            await deleteDoc(attRef);
+            dot.className = 'dot';
+        }
+    };
+
     onAuthStateChanged(auth, async (user) => {
         if (!user) { window.location.href = "../index.html"; return; }
-        
         await fetchLatestEvents();
+        
+        const roles = ["master_admin", "pastors", "shepherds"];
+        for (const role of roles) {
+            const snap = await getDoc(doc(db, role, user.uid));
+            if (snap.exists()) {
+                document.getElementById('roleInfo').innerText = `${role.replace('_',' ')}: ${snap.data().full_name}`;
+                
+                // Dynamic Dashboard Link
+                const dashLink = document.getElementById('dashLink');
+                if (role === "master_admin") dashLink.href = "../dashboard/admin-dash.html";
+                else if (role === "pastors") dashLink.href = "../dashboard/pastor-dash.html";
+                else dashLink.href = "../dashboard/shepherd-dash.html";
 
-        const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
-        const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
-        const shepherdSnap = await getDoc(doc(db, "shepherds", user.uid));
-
-        if (adminSnap.exists()) {
-            document.getElementById('roleInfo').innerText = "Logged in as Master Admin";
-            loadRegistry(query(collection(db, "members"), orderBy("last_name")));
-        } else if (pastorSnap.exists()) {
-            document.getElementById('roleInfo').innerText = `Pastor: ${pastorSnap.data().full_name}`;
-            loadRegistry(query(collection(db, "members"), where("pastorId", "==", user.uid)));
-        } else if (shepherdSnap.exists()) {
-            document.getElementById('roleInfo').innerText = `Shepherd: ${shepherdSnap.data().full_name}`;
-            loadRegistry(query(collection(db, "members"), where("shepherdId", "==", user.uid)));
+                let q = query(collection(db, "members"), orderBy("last_name"));
+                if (role === "pastors") q = query(collection(db, "members"), where("pastorId", "==", user.uid));
+                if (role === "shepherds") q = query(collection(db, "members"), where("shepherdId", "==", user.uid));
+                loadRegistry(q);
+                break;
+            }
         }
     });
 </script>
