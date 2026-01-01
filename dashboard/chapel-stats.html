@@ -2,97 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Performance | ShepherdNet</title>
+    <title>Global Admin Overview | ShepherdNet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); }
-        body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .back-btn { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
-        .performance-card { background: var(--glass); border: 1px solid var(--border); padding: 20px; border-radius: 20px; margin-top: 20px; }
-        .shepherd-row { display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid var(--border); }
-        .maturity-tag { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+        body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; padding: 20px; margin: 0; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        
+        /* Header & Search */
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .search-box { 
+            background: var(--glass); border: 1px solid var(--border); padding: 12px 20px; 
+            border-radius: 12px; color: white; width: 100%; max-width: 400px; outline: none; transition: 0.3s;
+        }
+        .search-box:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(79, 172, 254, 0.2); }
+        
+        .btn-export { background: var(--primary); color: #0f172a; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+
+        /* Pastor Card Styling */
+        .pastor-card { 
+            background: var(--glass); border: 1px solid var(--border); 
+            padding: 25px; border-radius: 24px; margin-bottom: 20px;
+            backdrop-filter: blur(10px); transition: 0.3s;
+        }
+        .pastor-card.hidden { display: none; }
+        .pastor-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+
+        .pastor-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px; }
+        .pastor-info h2 { margin: 0; font-size: 1.4rem; color: var(--primary); }
+        .pastor-info p { margin: 5px 0 0; opacity: 0.6; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .metric-box { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; text-align: center; border: 1px solid var(--border); }
+        .metric-label { font-size: 0.65rem; opacity: 0.5; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .metric-value { font-size: 1.5rem; font-weight: 600; }
+
+        #loading { text-align: center; padding: 50px; opacity: 0.5; }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-btn">← Back to Dashboard</a>
-        <h1 style="margin-top:20px">Chapel Performance</h1>
-        
-        <div class="performance-card">
-            <h3>Maturity Distribution</h3>
-            <canvas id="pastorMaturityChart" style="max-height: 250px;"></canvas>
-        </div>
-
-        <div class="performance-card">
-            <h3>Shepherd Breakdown</h3>
-            <div id="shepherdList">
-                <p style="opacity:0.5; text-align:center; padding:20px;">Loading hierarchy...</p>
+        <div class="header-flex">
+            <div>
+                <a href="index.html" style="color:var(--primary); text-decoration:none; font-size:0.8rem;">← Dashboard</a>
+                <h1 style="margin:5px 0;">Global Chapel Metrics</h1>
+                <input type="text" id="searchInput" class="search-box" placeholder="Search Pastor or Chapel Name...">
+            </div>
+            <div style="text-align: right;">
+                <div id="totalStats" style="opacity: 0.8; font-size: 0.9rem; margin-bottom: 10px;">Calculating...</div>
+                <button class="btn-export" id="exportBtn">Download CSV Report</button>
             </div>
         </div>
+
+        <div id="loading">Scanning network collections...</div>
+        <div id="pastorContainer"></div>
     </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { initializeFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-    const firebaseConfig = { /* Use your config here */ };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
+        authDomain: "fob-database-139d1.firebaseapp.com", 
+        projectId: "fob-database-139d1", 
+        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" 
+    };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app, "fobrealdbase");
+    const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
+
+    let masterData = []; // Store for searching and exporting
 
     onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
+        if (!user) { window.location.href = "../index.html"; return; }
+        loadMasterMetrics();
+    });
 
-        // 1. Get Shepherds
-        const sSnap = await getDocs(query(collection(db, "shepherds"), where("assigned_pastor_id", "==", user.uid)));
-        const shepherdMap = {};
-        sSnap.forEach(doc => {
-            shepherdMap[doc.id] = { name: doc.data().full_name, count: 0 };
-        });
+    async function loadMasterMetrics() {
+        try {
+            const [pastorsSnap, shepherdsSnap, membersSnap, attendanceSnap] = await Promise.all([
+                getDocs(collection(db, "pastors")),
+                getDocs(collection(db, "shepherds")),
+                getDocs(collection(db, "members")),
+                getDocs(collection(db, "attendance"))
+            ]);
 
-        // 2. Get Members
-        const mSnap = await getDocs(query(collection(db, "members"), where("pastorId", "==", user.uid)));
-        let established = 0;
-        let converts = 0;
-        let unassignedCount = 0;
+            document.getElementById('loading').style.display = 'none';
+            const container = document.getElementById('pastorContainer');
+            container.innerHTML = '';
 
-        mSnap.forEach(doc => {
-            const m = doc.data();
-            if (m.status === "Established Member") established++; else converts++;
+            pastorsSnap.forEach(pastorDoc => {
+                const pData = pastorDoc.data();
+                const pId = pastorDoc.id;
 
-            if (m.shepherdId && shepherdMap[m.shepherdId]) {
-                shepherdMap[m.shepherdId].count++;
-            } else {
-                unassignedCount++;
-            }
-        });
+                const myShepherds = shepherdsSnap.docs.filter(d => d.data().pastorId === pId).length;
+                const myMembers = membersSnap.docs.filter(d => d.data().pastorId === pId);
+                const established = myMembers.filter(d => d.data().status === "Established Member").length;
+                
+                const myAtts = attendanceSnap.docs.filter(d => d.data().pastorId === pId)
+                    .sort((a,b) => (b.data().timestamp?.seconds || 0) - (a.data().timestamp?.seconds || 0));
+                const lastAtt = myAtts[0] ? (myAtts[0].data().present_count || 0) : 0;
 
-        // 3. Render Chart
-        new Chart(document.getElementById('pastorMaturityChart'), {
-            type: 'pie',
-            data: {
-                labels: ['Established', 'New Converts'],
-                datasets: [{ data: [established, converts], backgroundColor: ['#00ff88', '#ff4b5c'] }]
-            }
-        });
+                const pastorObj = {
+                    name: pData.full_name,
+                    chapel: pData.chapel_name || "Main Branch",
+                    shepherds: myShepherds,
+                    members: myMembers.length,
+                    established: established,
+                    attendance: lastAtt
+                };
+                masterData.push(pastorObj);
+                renderCard(pastorObj);
+            });
 
-        // 4. Render Shepherd List
-        const listDiv = document.getElementById('shepherdList');
-        listDiv.innerHTML = `<div class="shepherd-row"><span><b>Directly under Pastor</b></span><span>${unassignedCount} Members</span></div>`;
-        
-        Object.values(shepherdMap).forEach(s => {
-            listDiv.innerHTML += `
-                <div class="shepherd-row">
-                    <span>${s.name}</span>
-                    <span>${s.count} Members</span>
+            updateTotals();
+        } catch (e) { console.error(e); }
+    }
+
+    function renderCard(p) {
+        document.getElementById('pastorContainer').innerHTML += `
+            <div class="pastor-card" data-search="${p.name.toLowerCase()} ${p.chapel.toLowerCase()}">
+                <div class="pastor-header">
+                    <div class="pastor-info">
+                        <p>${p.chapel}</p>
+                        <h2>Pastor ${p.name}</h2>
+                    </div>
                 </div>
-            `;
+                <div class="metrics-grid">
+                    <div class="metric-box"><span class="metric-label">Shepherds</span><span class="metric-value">${p.shepherds}</span></div>
+                    <div class="metric-box"><span class="metric-label">Total Members</span><span class="metric-value">${p.members}</span></div>
+                    <div class="metric-box"><span class="metric-label">Established</span><span class="metric-value" style="color:#00ff88">${p.established}</span></div>
+                    <div class="metric-box"><span class="metric-label">Last Attendance</span><span class="metric-value" style="color:var(--primary)">${p.attendance}</span></div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateTotals() {
+        const totalM = masterData.reduce((acc, curr) => acc + curr.members, 0);
+        document.getElementById('totalStats').innerHTML = `Total Network: <b>${masterData.length}</b> Pastors | <b>${totalM}</b> Members`;
+    }
+
+    // SEARCH LOGIC
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.pastor-card').forEach(card => {
+            const text = card.getAttribute('data-search');
+            card.classList.toggle('hidden', !text.includes(term));
         });
     });
+
+    // CSV EXPORT LOGIC
+    document.getElementById('exportBtn').onclick = () => {
+        let csv = "Pastor,Chapel,Shepherds,Total Members,Established,Last Attendance\n";
+        masterData.forEach(p => {
+            csv += `${p.name},${p.chapel},${p.shepherds},${p.members},${p.established},${p.attendance}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'Global_Metrics_Report.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
 </script>
 </body>
 </html>
