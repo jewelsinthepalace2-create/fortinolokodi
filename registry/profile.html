@@ -21,7 +21,6 @@
         }
         .profile-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover; margin-bottom: 15px; background: #1e293b; }
         h1 { font-size: 1.4rem; margin-bottom: 5px; }
-        .joined-date { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-bottom: 15px; }
 
         .filter-box { margin-bottom: 20px; }
         select { 
@@ -62,30 +61,14 @@
 
     <div class="profile-card">
         <img src="https://via.placeholder.com/100" class="profile-img" id="memberPic">
-        <h1 id="memberName">Loading...</h1>
-        <div id="pastorCredit" style="font-size: 0.8rem; color: var(--primary)"></div>
+        <h1 id="memberName">Checking Access...</h1>
     </div>
 
     <div class="filter-box">
         <select id="timeFilter">
-            <optgroup label="General">
-                <option value="all">All Time</option>
-                <option value="last-7">Last 7 Days</option>
-                <option value="last-30">Last 30 Days</option>
-            </optgroup>
-            <optgroup label="2026 Months">
-                <option value="2026-01">January</option>
-                <option value="2026-02">February</option>
-                <option value="2026-03">March</option>
-                <option value="2026-04">April</option>
-                <option value="2026-05">May</option>
-                <option value="2026-06">June</option>
-                <option value="2026-07">July</option>
-            </optgroup>
-            <optgroup label="Years">
-                <option value="2025">Year 2025</option>
-                <option value="2026">Year 2026</option>
-            </optgroup>
+            <option value="all">All History</option>
+            <option value="last-7">Last 7 Days</option>
+            <option value="last-30">Last 30 Days</option>
         </select>
     </div>
 
@@ -98,7 +81,9 @@
         <canvas id="attendanceChart"></canvas>
     </div>
 
-    <div class="history-list" id="historyList"></div>
+    <div id="historyList" class="history-list">
+        <p style="text-align:center; opacity:0.5;">Loading history...</p>
+    </div>
 </div>
 
 <div id="noteModal" class="modal">
@@ -106,7 +91,7 @@
         <h3 id="modalTitle" style="color: var(--primary); margin-bottom:10px;">Note</h3>
         <textarea id="noteInput"></textarea>
         <button class="btn-save-note" id="saveNoteBtn">Save Note</button>
-        <button onclick="document.getElementById('noteModal').style.display='none'" style="background:none; border:none; color:gray; width:100; margin-top:10px; cursor:pointer;">Cancel</button>
+        <button onclick="document.getElementById('noteModal').style.display='none'" style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Cancel</button>
     </div>
 </div>
 
@@ -114,18 +99,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-
-const auth = getAuth();
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        // User is signed in, proceed to load data
-        loadFullProfile();
-    } else {
-        // No user is signed in, redirect to login
-        window.location.href = "login.html";
-    }
-});
 
     const firebaseConfig = { 
         apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
@@ -137,102 +110,104 @@ onAuthStateChanged(auth, (user) => {
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app, "fobrealdbase");
+    const auth = getAuth(app);
 
     const urlParams = new URLSearchParams(window.location.search);
     const memberId = urlParams.get('id');
     let myChart = null;
 
-    // Filter Logic
-    function isDateInRange(dateStr, filterValue) {
-        if (filterValue === "all") return true;
-        
-        const eventDate = new Date(dateStr);
-        const today = new Date();
-
-        if (filterValue === "last-7") {
-            const diff = (today - eventDate) / (1000 * 60 * 60 * 24);
-            return diff <= 7 && diff >= 0;
+    // 1. AUTH CHECK: Only load if logged in
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            loadFullProfile();
+        } else {
+            window.location.href = "login.html";
         }
-        if (filterValue === "last-30") {
-            const diff = (today - eventDate) / (1000 * 60 * 60 * 24);
-            return diff <= 30 && diff >= 0;
-        }
-        
-        // Matches "2026-05" (Month) or "2026" (Year)
-        return dateStr.startsWith(filterValue);
-    }
+    });
 
-    // ... (Keep your HTML/CSS exactly the same) ...
-
-async function loadFullProfile(filter = "all") {
-    if (!memberId) {
-        document.getElementById('memberName').innerText = "No Member ID in URL (?id=...)";
-        return;
-    }
-
-    try {
-        // 1. Get Member Data
-        const mSnap = await getDoc(doc(db, "members", memberId));
-        if (!mSnap.exists()) {
-            document.getElementById('memberName').innerText = "Member ID not found.";
-            return;
-        }
-        document.getElementById('memberName').innerText = `${mSnap.data().first_name} ${mSnap.data().last_name}`;
-
-        // 2. Get ALL Events (The source of your list)
-        const eventsSnap = await getDocs(query(collection(db, "events"), orderBy("date", "desc")));
+    // 2. MAIN LOAD FUNCTION
+    async function loadFullProfile(filter = "all") {
+        if (!memberId) return;
         const historyDiv = document.getElementById('historyList');
-        historyDiv.innerHTML = "";
-        
-        if (eventsSnap.empty) {
-            historyDiv.innerHTML = "<p style='text-align:center;'>No events created yet.</p>";
-            return;
-        }
 
-        let presentCount = 0;
-        let displayedCount = 0;
+        try {
+            const mSnap = await getDoc(doc(db, "members", memberId));
+            if (!mSnap.exists()) {
+                document.getElementById('memberName').innerText = "Member not found";
+                return;
+            }
+            document.getElementById('memberName').innerText = `${mSnap.data().first_name} ${mSnap.data().last_name}`;
 
-        // 3. Loop Events -> Find Attendance if it exists
-        for (const evDoc of eventsSnap.docs) {
-            const ev = evDoc.data();
-            displayedCount++;
-
-            // Attempt to find attendance
-            const attId = `${memberId}_${evDoc.id}`;
-            const attSnap = await getDoc(doc(db, "attendance", attId));
+            const eventsSnap = await getDocs(query(collection(db, "events"), orderBy("date", "desc")));
+            historyDiv.innerHTML = "";
             
-            // If the collection is empty, attSnap.exists() will simply be false
-            const isPresent = attSnap.exists() && attSnap.data().status === 'present';
-            const note = attSnap.exists() ? (attSnap.data().note || "") : "";
-            
-            if(isPresent) presentCount++;
+            let presentCount = 0;
+            let displayedCount = 0;
+            const today = new Date();
 
-            historyDiv.innerHTML += `
-                <div class="history-item">
-                    <div class="service-info">
-                        <span style="font-weight:600">${ev.name}</span><br>
-                        <small style="opacity:0.5">${ev.date}</small>
-                        ${note ? `<span class="note-preview">📝 ${note}</span>` : ''}
-                    </div>
-                    <div class="status-area">
-                        <span class="status-pill ${isPresent ? 'pill-present' : 'pill-absent'}">
-                            ${isPresent ? 'PRESENT' : 'ABSENT'}
-                        </span>
-                        <button class="note-btn" onclick="openNote('${evDoc.id}', '${ev.name}', '${note}')">💬 Note</button>
-                    </div>
-                </div>`;
+            for (const evDoc of eventsSnap.docs) {
+                const ev = evDoc.data();
+                const eventDate = new Date(ev.date);
+
+                // Date Filtering
+                if (filter === "last-7" && (today - eventDate) / 86400000 > 7) continue;
+                if (filter === "last-30" && (today - eventDate) / 86400000 > 30) continue;
+
+                displayedCount++;
+                const attId = `${memberId}_${evDoc.id}`;
+                const attSnap = await getDoc(doc(db, "attendance", attId));
+                
+                const isPresent = attSnap.exists() && attSnap.data().status === 'present';
+                const note = attSnap.exists() ? (attSnap.data().note || "") : "";
+                if(isPresent) presentCount++;
+
+                historyDiv.innerHTML += `
+                    <div class="history-item">
+                        <div class="service-info">
+                            <span style="font-weight:600">${ev.name}</span><br>
+                            <small style="opacity:0.5">${ev.date}</small>
+                            ${note ? `<span class="note-preview">📝 ${note}</span>` : ''}
+                        </div>
+                        <div class="status-area">
+                            <span class="status-pill ${isPresent ? 'pill-present' : 'pill-absent'}">
+                                ${isPresent ? 'PRESENT' : 'ABSENT'}
+                            </span>
+                            <div style="display:flex; gap:5px;">
+                                <button class="note-btn" onclick="toggleStatus('${evDoc.id}', ${isPresent})">
+                                    ${isPresent ? 'Mark Absent' : 'Mark Present'}
+                                </button>
+                                <button class="note-btn" onclick="openNote('${evDoc.id}', '${ev.name.replace(/'/g, "\\'")}', '${note.replace(/'/g, "\\'")}')">💬</button>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            document.getElementById('totalServices').innerText = displayedCount;
+            document.getElementById('attRate').innerText = `${displayedCount > 0 ? Math.round((presentCount / displayedCount) * 100) : 0}%`;
+            renderChart(presentCount, displayedCount - presentCount);
+
+        } catch (error) {
+            console.error(error);
+            historyDiv.innerHTML = `<p style="color:red; font-size:0.8rem">Error: Check Console for Index Link.</p>`;
         }
-
-        // Update Stats
-        document.getElementById('totalServices').innerText = displayedCount;
-        document.getElementById('attRate').innerText = `${displayedCount > 0 ? Math.round((presentCount / displayedCount) * 100) : 0}%`;
-        renderChart(presentCount, displayedCount - presentCount);
-
-    } catch (error) {
-        console.error("Try:", error);
-        document.getElementById('historyList').innerHTML = `<p style="color:red">Check Browser Console (F12) for Index Link.</p>`;
     }
-}
+
+    // 3. TOGGLE ATTENDANCE LOGIC
+    window.toggleStatus = async (eventId, isCurrentlyPresent) => {
+        const newStatus = isCurrentlyPresent ? 'absent' : 'present';
+        const attRef = doc(db, "attendance", `${memberId}_${eventId}`);
+        try {
+            await setDoc(attRef, { 
+                status: newStatus, 
+                memberId: memberId, 
+                eventId: eventId,
+                lastUpdated: new Date()
+            }, { merge: true });
+            loadFullProfile(document.getElementById('timeFilter').value);
+        } catch (e) { alert(e.message); }
+    };
+
+    // 4. CHART & NOTES
     function renderChart(present, absent) {
         const ctx = document.getElementById('attendanceChart').getContext('2d');
         if (myChart) myChart.destroy();
@@ -261,7 +236,6 @@ async function loadFullProfile(filter = "all") {
     };
 
     document.getElementById('timeFilter').onchange = (e) => loadFullProfile(e.target.value);
-    loadFullProfile();
 </script>
 </body>
 </html>
