@@ -2,26 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add New Pastor/Shepherd | ShepherdNet</title>
+  <title>Add New Staff | ShepherdNet</title>
   <link rel="icon" type="image/png" href="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  
   <style>
     :root { 
-        --primary: #4facfe; 
-        --bg: #0f172a;
-        --glass: rgba(255, 255, 255, 0.05); 
-        --border: rgba(255, 255, 255, 0.1); 
-        --text-dim: #888;
+        --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); 
+        --border: rgba(255, 255, 255, 0.1); --text-dim: #888;
     }
     
     body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; padding: 40px 20px; margin: 0; }
-    
     .signup-container { width: 100%; max-width: 650px; background: var(--glass); padding: 40px; border-radius: 24px; border: 1px solid var(--border); backdrop-filter: blur(10px); }
     h2 { color: var(--primary); margin-bottom: 30px; text-align: center; font-weight: 600; letter-spacing: 1px; }
 
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .full-width { grid-column: span 2; }
+    .hidden { display: none; }
 
     .form-group { margin-bottom: 5px; }
     label { display: block; font-size: 0.7rem; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
@@ -33,22 +32,15 @@
         transition: 0.3s;
     }
     input:focus, select:focus { border-color: var(--primary); outline: none; background: rgba(0,0,0,0.4); }
-    
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; }
 
     .btn-register { 
         width: 100%; padding: 16px; background: var(--primary); 
         border: none; border-radius: 12px; color: #0f172a; 
-        font-weight: 600; cursor: pointer; margin-top: 30px; 
-        transition: 0.3s; font-size: 1rem;
+        font-weight: 600; cursor: pointer; margin-top: 30px; transition: 0.3s;
     }
     .btn-register:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3); }
-    .btn-register:disabled { opacity: 0.5; cursor: not-allowed; }
-
     .error-msg { color: #ff6b6b; font-size: 0.75rem; margin-top: 5px; display: none; }
-    
-    .back-link { color: var(--text-dim); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; transition: 0.3s; }
-    .back-link:hover { color: var(--primary); }
+    .back-link { color: var(--text-dim); text-decoration: none; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; margin-bottom: 20px; }
   </style>
 </head>
 <body>
@@ -69,6 +61,11 @@
       <div class="form-group">
         <label>Full Name</label>
         <input type="text" id="fullName" placeholder="e.g. Kofi Mensah" required>
+      </div>
+
+      <div class="form-group full-width hidden" id="chapelFieldGroup">
+        <label>Name of Chapel</label>
+        <input type="text" id="chapelName" placeholder="Enter branch name">
       </div>
 
       <div class="form-group">
@@ -119,9 +116,14 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { initializeApp, getApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
   import { initializeFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+  // --- INITIALIZE EMAILJS ---
+  (function() {
+      emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS Public Key
+  })();
 
   const firebaseConfig = { 
     apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
@@ -132,80 +134,74 @@
     appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" 
   };
   
-  // 1. Initialize Main App (Admin Session)
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
 
-  // 2. Initialize Secondary App (For creating users without logging out admin)
-  const secondaryApp = initializeApp(firebaseConfig, "Secondary");
-  const secondaryAuth = getAuth(secondaryApp);
-
-  // --- SECURITY CHECK: VERIFY MASTER ADMIN ---
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const adminDoc = await getDoc(doc(db, "master_admin", user.uid));
-      if (!adminDoc.exists() || adminDoc.data().role !== "master_admin") {
-        alert("Access Denied: You do not have Master Admin privileges.");
-        window.location.href = "../index.html"; // Redirect unauthorized users
-      } else {
-        console.log("Admin verified: Access granted.");
-      }
-    } else {
-      window.location.href = "../index.html"; // Redirect if not logged in at all
-    }
+  // UI Logic for Chapel Field
+  const roleSelect = document.getElementById('role');
+  const chapelGroup = document.getElementById('chapelFieldGroup');
+  roleSelect.addEventListener('change', () => {
+    roleSelect.value === 'pastors' ? chapelGroup.classList.remove('hidden') : chapelGroup.classList.add('hidden');
   });
-
-  const ghanaPhoneRegex = /^(?:\+233|0)[235][0-9]{8}$/;
 
   document.getElementById('signupForm').onsubmit = async (e) => {
     e.preventDefault();
-    
-    const contact = document.getElementById('contact').value;
     const btn = document.getElementById('submitBtn');
-
-    if (!ghanaPhoneRegex.test(contact)) {
-      document.getElementById('contactError').style.display = 'block';
-      return;
-    }
-
     btn.disabled = true;
-    btn.innerText = "Creating Account...";
+    btn.innerText = "Registering & Sending Email...";
+
+    const secondaryApp = initializeApp(firebaseConfig, "Secondary");
+    const secondaryAuth = getAuth(secondaryApp);
 
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
+    const fullName = document.getElementById('fullName').value;
     const collectionName = document.getElementById('role').value; 
-    const roleValue = collectionName.slice(0, -1); 
+    const roleString = collectionName.slice(0, -1); 
+    const chapelName = document.getElementById('chapelName').value || "N/A";
 
     try {
-      // Create user using the SECONDARY auth instance
+      // 1. Create Firebase Auth Account
       const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-      const newUser = userCredential.user;
-
-      // Write data using the MAIN db instance (Authorized by verified Master Admin)
-      await setDoc(doc(db, collectionName, newUser.uid), {
-        full_name: document.getElementById('fullName').value,
+      
+      // 2. Prepare Data for Firestore
+      const userData = {
+        full_name: fullName,
         gender: document.getElementById('gender').value,
         dob: document.getElementById('dob').value,
-        contact: contact,
+        contact: document.getElementById('contact').value,
         email: email,
         job: document.getElementById('job').value,
         course: document.getElementById('course').value,
         level: document.getElementById('level').value,
-        role: roleValue,
+        role: roleString,
         created_at: serverTimestamp()
+      };
+      if (roleString === 'pastor') userData.chapel_name = chapelName;
+
+      // 3. Write to Database
+      await setDoc(doc(db, collectionName, userCredential.user.uid), userData);
+
+      // 4. Send Welcome Email via EmailJS
+      await emailjs.send("service_vzxws9f", "template_buctifq", {
+          full_name: fullName,
+          role: roleString,
+          email: email,
+          password: password,
+          chapel_name: roleString === 'pastor' ? chapelName : "General"
       });
 
       await signOut(secondaryAuth);
+      await deleteApp(secondaryApp);
 
-      alert(`Success! ${document.getElementById('fullName').value} registered.`);
+      alert(`Success! ${fullName} has been registered and an email has been sent.`);
       document.getElementById('signupForm').reset();
-      btn.disabled = false;
-      btn.innerText = "Create User Account";
+      chapelGroup.classList.add('hidden');
 
     } catch (error) {
-      console.error(error);
       alert("Error: " + error.message);
+    } finally {
       btn.disabled = false;
       btn.innerText = "Create User Account";
     }
