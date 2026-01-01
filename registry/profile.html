@@ -66,25 +66,19 @@
         <select id="timeFilter">
             <option value="all">Full 2026 Calendar</option>
             <optgroup label="2026 Months">
-                <option value="2026-01">January</option>
-                <option value="2026-02">February</option>
-                <option value="2026-03">March</option>
-                <option value="2026-04">April</option>
-                <option value="2026-05">May</option>
-                <option value="2026-06">June</option>
-                <option value="2026-07">July</option>
-                <option value="2026-08">August</option>
-                <option value="2026-09">September</option>
-                <option value="2026-10">October</option>
-                <option value="2026-11">November</option>
-                <option value="2026-12">December</option>
+                <option value="2026-01">January</option><option value="2026-02">February</option>
+                <option value="2026-03">March</option><option value="2026-04">April</option>
+                <option value="2026-05">May</option><option value="2026-06">June</option>
+                <option value="2026-07">July</option><option value="2026-08">August</option>
+                <option value="2026-09">September</option><option value="2026-10">October</option>
+                <option value="2026-11">November</option><option value="2026-12">December</option>
             </optgroup>
         </select>
     </div>
 
     <div class="stats-row">
-        <div class="stat-card"><span class="stat-val" id="totalPastEvents">0</span><span class="stat-lab">Services Due</span></div>
-        <div class="stat-card"><span class="stat-val" id="attRate">0%</span><span class="stat-lab">Attendance</span></div>
+        <div class="stat-card"><span class="stat-val" id="totalPastEvents">0</span><span class="stat-lab">Total Services Due</span></div>
+        <div class="stat-card"><span class="stat-val" id="attRate">0%</span><span class="stat-lab">Att. Rate</span></div>
     </div>
 
     <div class="chart-box"><canvas id="attendanceChart"></canvas></div>
@@ -144,7 +138,6 @@
             let pastEventsCount = 0;
             let listHtml = "";
 
-            // LOGIC: Midnight GMT+0 Lock
             const now = new Date();
             const todayGMT = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString().split('T')[0];
 
@@ -156,6 +149,7 @@
                 
                 const isDue = ev.date <= todayGMT;
 
+                // MATH: Automatically counts as a 'miss' if isDue is true and isPresent is false
                 if (isDue) {
                     pastEventsCount++;
                     if (isPresent) presentCount++;
@@ -211,10 +205,10 @@
         myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Present', 'Absent'],
+                labels: ['Present', 'Missed'],
                 datasets: [{ data: [present, absent], backgroundColor: ['#00ff88', '#ff4b5c'], borderColor: 'transparent' }]
             },
-            options: { cutout: '75%', animation: { duration: 500 }, plugins: { legend: { display: false } } }
+            options: { cutout: '75%', plugins: { legend: { display: false } } }
         });
     }
 
