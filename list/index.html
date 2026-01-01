@@ -24,11 +24,14 @@
     nav { 
         width: var(--sidebar-width); background: var(--glass); backdrop-filter: blur(15px); 
         border-right: 1px solid var(--border); padding: 40px 20px; display: flex; 
-        flex-direction: column; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-direction: column; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         position: sticky; top: 0; height: 100vh; z-index: 1000;
     }
-    
+
+    /* Desktop Collapse Logic */
     body.sidebar-hidden nav { width: var(--sidebar-collapsed); padding: 40px 15px; }
+    body.sidebar-hidden .nav-logo, 
+    body.sidebar-hidden nav a span:last-child { display: none; }
 
     .menu-toggle {
         position: absolute; right: -15px; top: 30px; width: 30px; height: 30px;
@@ -46,10 +49,9 @@
         opacity: 0.7; transition: 0.3s; margin-bottom: 8px; font-size: 0.9rem; white-space: nowrap;
     }
     nav a:hover, nav a.active { opacity: 1; color: var(--primary); background: var(--glass); }
-    body.sidebar-hidden nav a span:last-child { display: none; }
 
     /* --- MAIN CONTENT --- */
-    main { flex: 1; padding: 40px 20px; }
+    main { flex: 1; padding: 40px 20px; transition: 0.3s; }
     .container { max-width: 800px; margin: 0 auto; }
     h2 { font-size: 1.2rem; margin-bottom: 20px; font-weight: 400; color: var(--text-dim); }
 
@@ -61,7 +63,7 @@
     }
     .member-tab:hover { border-color: var(--primary); transform: translateX(5px); }
     .member-info { display: flex; align-items: center; gap: 15px; }
-    .status-tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 6px; background: rgba(79, 172, 254, 0.1); color: var(--primary); font-weight: 600; }
+    .status-tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 6px; background: rgba(79, 172, 254, 0.1); color: var(--primary); font-weight: 600; text-transform: uppercase; }
 
     .group-header { margin: 25px 0 10px 0; border-left: 3px solid var(--primary); padding-left: 12px; color: var(--primary); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; }
 
@@ -69,23 +71,31 @@
         position: fixed; bottom: 30px; right: 30px; 
         background: var(--primary); color: #0f172a; width: 56px; height: 56px; border-radius: 50%; 
         display: flex; justify-content: center; align-items: center; font-size: 28px; text-decoration: none;
-        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3); z-index: 100;
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3); z-index: 100; transition: 0.3s;
     }
+    .add-btn:hover { transform: scale(1.1); }
 
     /* --- MOBILE RESPONSIVENESS --- */
     @media (max-width: 768px) {
+        .menu-toggle { display: none; } /* Hide desktop toggle */
         nav { 
-            position: fixed; left: 0; 
-            transform: translateX(-100%); /* Hidden by default on mobile */
+            position: fixed; left: 0; top: 0;
+            width: var(--sidebar-width) !important;
+            transform: translateX(-100%); 
         }
-        body.mobile-open nav { 
-            transform: translateX(0); 
-            width: var(--sidebar-width);
-        }
+        body.mobile-open nav { transform: translateX(0); }
+        
+        /* Ensure labels show on mobile even if sidebar-hidden class exists */
+        body.sidebar-hidden nav a span:last-child,
+        body.sidebar-hidden .nav-logo { display: inline-block; }
+
         .mobile-trigger {
             position: fixed; top: 20px; left: 20px; z-index: 1200;
-            background: var(--primary); color: #0f172a; padding: 8px; border-radius: 8px; display: block;
+            background: var(--primary); color: #0f172a; width: 40px; height: 40px;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
+        main { padding-top: 80px; }
     }
     @media (min-width: 769px) { .mobile-trigger { display: none; } }
   </style>
@@ -98,12 +108,12 @@
   </div>
   <div class="nav-logo">SHEPHERDNET</div>
   
-  <a href="#" id="dynamicDashboard"><span>🏠</span> <span>Dashboard</span></a>
+  <a href="#" id="dashboardBtn"><span>🏠</span> <span>Dashboard</span></a>
   <a href="#" class="active"><span>📋</span> <span>Registry</span></a>
   <a href="../list/settings.html"><span>⚙️</span> <span>Settings</span></a>
 </nav>
 
-<div class="mobile-trigger" onclick="document.body.classList.toggle('mobile-open')">☰</div>
+<div class="mobile-trigger" id="mobileMenuBtn">☰</div>
 
 <main>
     <div class="container">
@@ -132,45 +142,90 @@
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
 
-  // Sidebar Logic
-  document.getElementById('sidebarToggle').onclick = () => {
+  // --- UI INTERACTION LOGIC ---
+  
+  // Desktop Sidebar Toggle
+  document.getElementById('sidebarToggle').onclick = (e) => {
+    e.stopPropagation();
     document.body.classList.toggle('sidebar-hidden');
+  };
+
+  // Mobile Menu Toggle
+  document.getElementById('mobileMenuBtn').onclick = (e) => {
+    e.stopPropagation();
+    document.body.classList.toggle('mobile-open');
+  };
+
+  // Close Mobile Menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('sidebar');
+      if (!sidebar.contains(e.target)) {
+        document.body.classList.remove('mobile-open');
+      }
+    }
+  });
+
+  // Smart Dashboard Redirect
+  document.getElementById('dashboardBtn').onclick = async (e) => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    // Check Master Admin
+    const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
+    if (adminSnap.exists()) {
+        window.location.href = "../admin/index.html";
+        return;
+    }
+
+    // Check Pastor
+    const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
+    if (pastorSnap.exists()) {
+        window.location.href = "../dashboard/index.html";
+        return;
+    }
+
+    // Check Shepherd
+    const shepSnap = await getDoc(doc(db, "shepherds", user.uid));
+    if (shepSnap.exists()) {
+        window.location.href = "../shepherd/index.html";
+        return;
+    }
   };
 
   // Sync Theme
   const savedTheme = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', savedTheme);
 
+  // --- DATA LOADING LOGIC ---
+
   async function startApp(user) {
     const headerTitle = document.getElementById('headerTitle');
-    const dashLink = document.getElementById('dynamicDashboard');
     
-    // Set Dashboard Link and Load Data
+    // Check Master Admin first
     const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
     if (adminSnap.exists()) {
-      dashLink.href = "../admin/index.html";
       headerTitle.textContent = "Global Member Registry";
       loadAdminView();
       return;
     }
 
+    // Check Pastor second
     const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
     if (pastorSnap.exists()) {
-      dashLink.href = "../pastor/index.html";
       headerTitle.textContent = "Chapel Management";
       loadPastorView(user.uid);
       return;
     }
 
+    // Check Shepherd third
     const shepSnap = await getDoc(doc(db, "shepherds", user.uid));
     if (shepSnap.exists()) {
-      dashLink.href = "../shepherd/index.html";
       headerTitle.textContent = "My Assigned Souls";
       loadShepherdView(user.uid);
     }
   }
-
-  // ... (Keep your loadAdminView, loadPastorView, loadShepherdView, and render functions as they were) ...
 
   async function loadAdminView() {
     const list = document.getElementById('list');
