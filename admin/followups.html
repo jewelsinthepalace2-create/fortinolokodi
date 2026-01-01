@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Global Follow-ups | ShepherdNet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); 
+            --border: rgba(255, 255, 255, 0.1); --text: #ffffff;
+        }
+        body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        header { margin-bottom: 30px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
+
+        /* Filter Section */
+        .filter-bar {
+            background: var(--glass); padding: 15px; border-radius: 15px;
+            border: 1px solid var(--border); margin-bottom: 25px;
+            display: flex; align-items: center; gap: 15px;
+        }
+        select {
+            background: #1e293b; color: white; border: 1px solid var(--border);
+            padding: 8px 12px; border-radius: 8px; flex: 1; outline: none;
+        }
+
+        /* Follow-up Card */
+        .note-card {
+            background: var(--glass); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 20px; margin-bottom: 15px; transition: 0.3s;
+        }
+        .note-card:hover { border-color: var(--primary); transform: scale(1.01); }
+        
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .member-name { font-weight: 600; color: var(--primary); font-size: 1.1rem; }
+        .service-tag { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; }
+        
+        .note-content { font-style: italic; color: #cbd5e1; margin: 15px 0; line-height: 1.6; border-left: 3px solid var(--primary); padding-left: 15px; }
+        
+        .card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        .author-info { display: flex; align-items: center; gap: 8px; }
+        .author-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; }
+
+        .loading { text-align: center; padding: 40px; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-top">
+            <div>
+                <h1>Follow-up Feed</h1>
+                <p style="font-size: 0.8rem; opacity: 0.6;">Global Soul-Winning Oversight</p>
+            </div>
+            <a href="index.html" class="back-link">Admin Dashboard</a>
+        </div>
+
+        <div class="filter-bar">
+            <span style="font-size: 0.8rem; font-weight: 600;">Filter by Pastor:</span>
+            <select id="pastorFilter">
+                <option value="all">Show All Chapels</option>
+                </select>
+        </div>
+    </header>
+
+    <div id="feedContainer">
+        <div class="loading">Loading reports...</div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, orderBy, limit, doc, getDoc, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
+        authDomain: "fob-database-139d1.firebaseapp.com",
+        projectId: "fob-database-139d1",
+        storageBucket: "fob-database-139d1.firebasestorage.app",
+        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app, "fobrealdbase");
+
+    const pastorFilter = document.getElementById('pastorFilter');
+    const feedContainer = document.getElementById('feedContainer');
+
+    // 1. Load Pastors into the Dropdown
+    async function initFilters() {
+        const pSnap = await getDocs(collection(db, "pastors"));
+        pSnap.forEach(pDoc => {
+            const p = pDoc.data();
+            const opt = document.createElement('option');
+            opt.value = pDoc.id;
+            opt.textContent = p.full_name;
+            pastorFilter.appendChild(opt);
+        });
+    }
+
+    // 2. Load Feed (with optional filter)
+    async function loadFeed(filterId = "all") {
+        feedContainer.innerHTML = '<div class="loading">Filtering records...</div>';
+        
+        const q = query(collection(db, "attendance"), orderBy("timestamp", "desc"), limit(100));
+        const snap = await getDocs(q);
+        
+        if (snap.empty) {
+            feedContainer.innerHTML = "<p>No follow-up notes found.</p>";
+            return;
+        }
+
+        const cards = [];
+
+        for (const aDoc of snap.docs) {
+            const data = aDoc.data();
+            if (!data.note) continue;
+
+            const [mId, eId] = aDoc.id.split('_');
+            const mSnap = await getDoc(doc(db, "members", mId));
+            
+            if (!mSnap.exists()) continue;
+            const member = mSnap.data();
+
+            // Filter Logic
+            if (filterId !== "all" && member.pastorId !== filterId) continue;
+
+            const eSnap = await getDoc(doc(db, "events", eId));
+            const pSnap = await getDoc(doc(db, "pastors", member.pastorId));
+            
+            const eventName = eSnap.exists() ? eSnap.data().name : "Unknown Service";
+            const authorName = pSnap.exists() ? pSnap.data().full_name : "Leader";
+
+            cards.push(`
+                <div class="note-card">
+                    <div class="card-header">
+                        <span class="member-name">${member.first_name} ${member.last_name}</span>
+                        <span class="service-tag">${eventName}</span>
+                    </div>
+                    <div class="note-content">"${data.note}"</div>
+                    <div class="card-footer">
+                        <div class="author-info">
+                            <div class="author-avatar">${authorName.charAt(0)}</div>
+                            <span>From Chapel: <b>${authorName}</b></span>
+                        </div>
+                        <span>${data.timestamp?.toDate().toLocaleDateString() || 'Recently'}</span>
+                    </div>
+                </div>
+            `);
+        }
+
+        feedContainer.innerHTML = cards.length > 0 ? cards.join('') : "<p style='text-align:center; padding:20px;'>No notes found for this pastor.</p>";
+    }
+
+    // Event Listener for Filter Change
+    pastorFilter.onchange = (e) => loadFeed(e.target.value);
+
+    // Initial Execution
+    await initFilters();
+    loadFeed();
+</script>
+</body>
+</html>
