@@ -25,7 +25,7 @@
         .stat-lab { font-size: 0.65rem; text-transform: uppercase; opacity: 0.6; }
         .chart-box { background: var(--glass); padding: 20px; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 20px; }
         .history-list { background: var(--glass); padding: 20px; border-radius: 24px; border: 1px solid var(--border); }
-        .history-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 0; border-bottom: 1px solid var(--border); }
+        .history-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 0; border-bottom: 1px solid var(--border); transition: 0.3s; }
         .history-item:last-child { border-bottom: none; }
         .service-info { flex: 1; }
         .note-preview { font-size: 0.75rem; color: var(--primary); margin-top: 5px; font-style: italic; display: block; }
@@ -34,10 +34,21 @@
         .pill-present { background: rgba(0, 255, 136, 0.15); color: var(--green); }
         .pill-absent { background: rgba(255, 75, 92, 0.15); color: var(--red); }
         .pill-neutral { background: rgba(100, 116, 139, 0.15); color: var(--neutral); }
-        .note-btn { background: var(--glass); border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+        
+        .action-group { display: flex; gap: 6px; }
+        .btn-action { 
+            padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); 
+            cursor: pointer; font-size: 0.75rem; font-weight: 700; transition: 0.2s;
+            background: rgba(255,255,255,0.05); color: white;
+        }
+        .btn-action:disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+        .btn-p.active { background: var(--green); color: #0f172a; border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,136,0.3); }
+        .btn-a.active { background: var(--red); color: white; border-color: var(--red); box-shadow: 0 0 10px rgba(255,75,92,0.3); }
+        .note-btn { background: var(--glass); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 8px; cursor: pointer; }
+
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
         .modal-content { background: #1e293b; padding: 25px; border-radius: 24px; width: 90%; max-width: 400px; border: 1px solid var(--border); }
-        textarea { width: 100%; height: 120px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: white; padding: 12px; margin-bottom: 15px; box-sizing: border-box;}
+        textarea { width: 100%; height: 120px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; color: white; padding: 12px; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; }
         .btn-save-note { width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
         .back-btn { display: inline-block; margin-bottom: 20px; color: var(--primary); text-decoration: none; }
     </style>
@@ -54,20 +65,26 @@
     <div class="filter-box">
         <select id="timeFilter">
             <option value="all">Full 2026 Calendar</option>
-            <optgroup label="Months">
-                <option value="2026-01">January</option><option value="2026-02">February</option>
-                <option value="2026-03">March</option><option value="2026-04">April</option>
-                <option value="2026-05">May</option><option value="2026-06">June</option>
-                <option value="2026-07">July</option><option value="2026-08">August</option>
-                <option value="2026-09">September</option><option value="2026-10">October</option>
-                <option value="2026-11">November</option><option value="2026-12">December</option>
+            <optgroup label="2026 Months">
+                <option value="2026-01">January</option>
+                <option value="2026-02">February</option>
+                <option value="2026-03">March</option>
+                <option value="2026-04">April</option>
+                <option value="2026-05">May</option>
+                <option value="2026-06">June</option>
+                <option value="2026-07">July</option>
+                <option value="2026-08">August</option>
+                <option value="2026-09">September</option>
+                <option value="2026-10">October</option>
+                <option value="2026-11">November</option>
+                <option value="2026-12">December</option>
             </optgroup>
         </select>
     </div>
 
     <div class="stats-row">
-        <div class="stat-card"><span class="stat-val" id="totalPastEvents">0</span><span class="stat-lab">Services To Date</span></div>
-        <div class="stat-card"><span class="stat-val" id="attRate">0%</span><span class="stat-lab">Attendance Rate</span></div>
+        <div class="stat-card"><span class="stat-val" id="totalPastEvents">0</span><span class="stat-lab">Services Due</span></div>
+        <div class="stat-card"><span class="stat-val" id="attRate">0%</span><span class="stat-lab">Attendance</span></div>
     </div>
 
     <div class="chart-box"><canvas id="attendanceChart"></canvas></div>
@@ -77,7 +94,7 @@
 <div id="noteModal" class="modal">
     <div class="modal-content">
         <h3 id="modalTitle" style="color: var(--primary); margin-bottom:10px;">Note</h3>
-        <textarea id="noteInput"></textarea>
+        <textarea id="noteInput" placeholder="Enter follow-up details..."></textarea>
         <button class="btn-save-note" id="saveNoteBtn">Save Note</button>
         <button onclick="document.getElementById('noteModal').style.display='none'" style="background:none; border:none; color:gray; width:100%; margin-top:10px; cursor:pointer;">Cancel</button>
     </div>
@@ -117,53 +134,53 @@
             const mSnap = await getDoc(doc(db, "members", memberId));
             if (mSnap.exists()) document.getElementById('memberName').innerText = `${mSnap.data().first_name} ${mSnap.data().last_name}`;
 
-            const attQuery = query(collection(db, "attendance"), where("memberId", "==", memberId));
-            const attDocs = await getDocs(attQuery);
+            const attDocs = await getDocs(query(collection(db, "attendance"), where("memberId", "==", memberId)));
             const attendanceMap = {};
             attDocs.forEach(d => attendanceMap[d.data().eventId] = d.data());
 
             const eventsSnap = await getDocs(query(collection(db, "events"), orderBy("date", "asc")));
             
             let presentCount = 0;
-            let pastEventsCount = 0; // Only events <= Today
+            let pastEventsCount = 0;
             let listHtml = "";
 
-            const todayStr = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+            // LOGIC: Midnight GMT+0 Lock
+            const now = new Date();
+            const todayGMT = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString().split('T')[0];
 
             eventsSnap.forEach(evDoc => {
                 const ev = evDoc.data();
                 const attData = attendanceMap[evDoc.id] || {};
-                const hasStatus = attData.status !== undefined;
                 const isPresent = attData.status === 'present';
-                const isPast = ev.date <= todayStr;
+                const isAbsent = attData.status === 'absent';
                 
-                // MATH LOGIC: Only calculate stats for events that have happened
-                if (isPast) {
+                const isDue = ev.date <= todayGMT;
+
+                if (isDue) {
                     pastEventsCount++;
                     if (isPresent) presentCount++;
                 }
 
-                // UI LOGIC: Filtered History List
                 if (filterValue === "all" || ev.date.startsWith(filterValue)) {
-                    let statusLabel = "Scheduled";
                     let pillClass = "pill-neutral";
-                    
-                    if (hasStatus) {
-                        statusLabel = isPresent ? "Present" : "Absent";
-                        pillClass = isPresent ? "pill-present" : "pill-absent";
-                    }
+                    let statusLabel = isDue ? "Unmarked" : "Locked 🔒";
+                    if (isPresent) { pillClass = "pill-present"; statusLabel = "Present"; }
+                    else if (isAbsent) { pillClass = "pill-absent"; statusLabel = "Absent"; }
 
                     listHtml += `
-                        <div class="history-item" style="${!isPast ? 'opacity:0.7' : ''}">
+                        <div class="history-item" style="${!isDue ? 'opacity:0.4' : ''}">
                             <div class="service-info">
                                 <span style="font-weight:600">${ev.name}</span><br>
-                                <small style="opacity:0.5">${ev.date} ${!isPast ? '(Future)' : ''}</small>
+                                <small style="opacity:0.5">${ev.date}</small>
                                 ${attData.note ? `<span class="note-preview">📝 ${attData.note}</span>` : ''}
                             </div>
                             <div class="status-area">
                                 <span class="status-pill ${pillClass}">${statusLabel}</span>
-                                <div style="display:flex; gap:5px;">
-                                    <button class="note-btn" onclick="toggleStatus('${evDoc.id}', '${attData.status || 'none'}')">Mark</button>
+                                <div class="action-group">
+                                    <button class="btn-action btn-p ${isPresent ? 'active' : ''}" 
+                                        onclick="updateStatus('${evDoc.id}', 'present')" ${!isDue ? 'disabled' : ''}>P</button>
+                                    <button class="btn-action btn-a ${isAbsent ? 'active' : ''}" 
+                                        onclick="updateStatus('${evDoc.id}', 'absent')" ${!isDue ? 'disabled' : ''}>A</button>
                                     <button class="note-btn" onclick="openNote('${evDoc.id}', '${ev.name.replace(/'/g, "\\'")}', '${(attData.note || "").replace(/'/g, "\\'")}')">💬</button>
                                 </div>
                             </div>
@@ -171,7 +188,7 @@
                 }
             });
 
-            historyDiv.innerHTML = listHtml;
+            historyDiv.innerHTML = listHtml || "<p style='text-align:center; opacity:0.5;'>No events scheduled.</p>";
             document.getElementById('totalPastEvents').innerText = pastEventsCount;
             document.getElementById('attRate').innerText = `${pastEventsCount > 0 ? Math.round((presentCount / pastEventsCount) * 100) : 0}%`;
             renderChart(presentCount, pastEventsCount - presentCount);
@@ -179,12 +196,7 @@
         } catch (error) { console.error(error); }
     }
 
-    // UPDATED: Cycle through None -> Present -> Absent
-    window.toggleStatus = async (eventId, currentStatus) => {
-        let newStatus;
-        if (currentStatus === 'none' || currentStatus === 'absent') newStatus = 'present';
-        else newStatus = 'absent';
-
+    window.updateStatus = async (eventId, newStatus) => {
         try {
             await setDoc(doc(db, "attendance", `${memberId}_${eventId}`), { 
                 status: newStatus, memberId, eventId, lastUpdated: new Date()
@@ -199,17 +211,10 @@
         myChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Attended', 'Missed'],
-                datasets: [{ 
-                    data: [present, absent], 
-                    backgroundColor: ['#00ff88', '#ff4b5c'], 
-                    borderColor: 'transparent' 
-                }]
+                labels: ['Present', 'Absent'],
+                datasets: [{ data: [present, absent], backgroundColor: ['#00ff88', '#ff4b5c'], borderColor: 'transparent' }]
             },
-            options: { 
-                cutout: '75%', 
-                plugins: { legend: { display: false } }
-            }
+            options: { cutout: '75%', animation: { duration: 500 }, plugins: { legend: { display: false } } }
         });
     }
 
