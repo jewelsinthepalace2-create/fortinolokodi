@@ -50,7 +50,9 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    // 1. ADD THIS: Import Auth
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
 
     const firebaseConfig = { 
         apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
@@ -62,6 +64,16 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app, "fobrealdbase");
+    // 2. ADD THIS: Initialize Auth
+    const auth = getAuth(app);
+
+    // 3. ADD THIS: Protect the page. If not logged in, they can't stay here.
+    onAuthStateChanged(auth, (user) => {
+        if (!user) {
+            alert("Please login first!");
+            window.location.href = "../index.html"; // Redirect to login
+        }
+    });
 
     // --- 1. SPECIAL EVENT CREATION ---
     document.getElementById('btnCreateSpecial').onclick = async () => {
@@ -76,11 +88,15 @@
                 name: name,
                 date: date,
                 category: cat,
+                createdBy: auth.currentUser.uid, // Good practice to track who made it
                 timestamp: new Date()
             });
             alert("Special Event Created!");
             window.location.reload();
-        } catch (e) { alert(e.message); }
+        } catch (e) { 
+            console.error(e);
+            alert("Permission Denied: Ensure you are logged in as Admin."); 
+        }
     };
 
     // --- 2. AUTO GENERATION LOGIC ---
