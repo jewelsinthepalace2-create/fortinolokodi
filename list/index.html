@@ -182,7 +182,7 @@
     // Check Pastor
     const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
     if (pastorSnap.exists()) {
-        window.location.href = "../dashboard/index.html";
+        window.location.href = "../pastor/index.html";
         return;
     }
 
