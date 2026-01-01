@@ -190,36 +190,39 @@ async function loadAdminView() {
     const snaps = await getDocs(q);
     list.innerHTML = "";
     
-    // Cache to prevent looking up the same person multiple times
     const nameCache = {};
 
     for (const m of snaps.docs) {
         const data = m.data();
         let addedBy = "Registry";
         
-        // 1. APPLY YOUR LOGIC: Prioritize Shepherd unless it's a direct pastor entry
         let targetId = null;
-        if (data.shepherdId && data.shepherdId !== "direct_pastor_entry") {
+
+        // FIXED LOGIC: 
+        // 1. If it's a real shepherd ID (not a special string), use it.
+        if (data.shepherdId && 
+            data.shepherdId !== "direct_pastor_entry" && 
+            data.shepherdId !== "master_admin_entry") {
             targetId = data.shepherdId;
-        } else {
+        } 
+        // 2. Otherwise, use the pastorId (which for Admins is their own UID).
+        else {
             targetId = data.pastorId;
         }
 
-        // 2. Perform the smart lookup if we have an ID
         if (targetId) {
             if (!nameCache[targetId]) {
-                // Check all three possible collections
-                const collections = ["shepherds", "pastors", "master_admin"];
+                const collections = ["master_admin", "pastors", "shepherds"];
                 let foundName = "Unknown User";
 
                 for (const coll of collections) {
                     const userSnap = await getDoc(doc(db, coll, targetId));
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
-                        const roleLabel = coll === "shepherds" ? "Shepherd" : 
-                                        coll === "pastors" ? "Pastor" : "Admin";
+                        const roleLabel = coll === "shepherds" ? "Shep." : 
+                                        coll === "pastors" ? "Past." : "Admin";
                         foundName = `${roleLabel}: ${userData.full_name || 'No Name'}`;
-                        break; // Stop searching once found
+                        break; 
                     }
                 }
                 nameCache[targetId] = foundName;
@@ -230,7 +233,6 @@ async function loadAdminView() {
         renderMemberTab(list, { id: m.id, ...data }, addedBy);
     }
 }
-
   async function loadPastorView(pastorId) {
     const list = document.getElementById('list');
     const shepQ = query(collection(db, "shepherds"), where("assigned_pastor_id", "==", pastorId));
