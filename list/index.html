@@ -13,9 +13,7 @@
         --sidebar-width: 260px; --sidebar-collapsed: 80px;
     }
 
-    [data-theme="light"] {
-        --bg: #f1f5f9; --glass: #ffffff; --border: #e2e8f0; --text: #0f172a; --text-dim: #64748b;
-    }
+    [data-theme="light"] { --bg: #f1f5f9; --glass: #ffffff; --border: #e2e8f0; --text: #0f172a; --text-dim: #64748b; }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; display: flex; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
@@ -24,14 +22,13 @@
     nav { 
         width: var(--sidebar-width); background: var(--glass); backdrop-filter: blur(15px); 
         border-right: 1px solid var(--border); padding: 40px 20px; display: flex; 
-        flex-direction: column; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-direction: column; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s ease;
         position: sticky; top: 0; height: 100vh; z-index: 1000;
     }
 
     /* Desktop Collapse Logic */
     body.sidebar-hidden nav { width: var(--sidebar-collapsed); padding: 40px 15px; }
-    body.sidebar-hidden .nav-logo, 
-    body.sidebar-hidden nav a span:last-child { display: none; }
+    body.sidebar-hidden .nav-logo, body.sidebar-hidden nav a span:last-child { display: none; }
 
     .menu-toggle {
         position: absolute; right: -15px; top: 30px; width: 30px; height: 30px;
@@ -56,14 +53,15 @@
     h2 { font-size: 1.2rem; margin-bottom: 20px; font-weight: 400; color: var(--text-dim); }
 
     .member-tab { 
-        background: var(--glass); padding: 12px 20px; border-radius: 12px; 
+        background: var(--glass); padding: 15px 20px; border-radius: 12px; 
         border: 1px solid var(--border); cursor: pointer; display: flex; 
         justify-content: space-between; align-items: center; transition: 0.2s;
         margin-bottom: 8px;
     }
     .member-tab:hover { border-color: var(--primary); transform: translateX(5px); }
-    .member-info { display: flex; align-items: center; gap: 15px; }
-    .status-tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 6px; background: rgba(79, 172, 254, 0.1); color: var(--primary); font-weight: 600; text-transform: uppercase; }
+    .member-info { display: flex; flex-direction: column; gap: 4px; }
+    .added-by { font-size: 0.7rem; color: var(--text-dim); font-style: italic; }
+    .status-tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 6px; background: rgba(79, 172, 254, 0.1); color: var(--primary); font-weight: 600; text-transform: uppercase; margin-left: 10px; vertical-align: middle; }
 
     .group-header { margin: 25px 0 10px 0; border-left: 3px solid var(--primary); padding-left: 12px; color: var(--primary); font-size: 0.8rem; text-transform: uppercase; font-weight: 600; }
 
@@ -73,21 +71,17 @@
         display: flex; justify-content: center; align-items: center; font-size: 28px; text-decoration: none;
         box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3); z-index: 100; transition: 0.3s;
     }
-    .add-btn:hover { transform: scale(1.1); }
 
     /* --- MOBILE RESPONSIVENESS --- */
     @media (max-width: 768px) {
-        .menu-toggle { display: none; } /* Hide desktop toggle */
+        .menu-toggle { display: none; }
         nav { 
             position: fixed; left: 0; top: 0;
             width: var(--sidebar-width) !important;
             transform: translateX(-100%); 
         }
         body.mobile-open nav { transform: translateX(0); }
-        
-        /* Ensure labels show on mobile even if sidebar-hidden class exists */
-        body.sidebar-hidden nav a span:last-child,
-        body.sidebar-hidden .nav-logo { display: inline-block; }
+        body.sidebar-hidden nav a span:last-child, body.sidebar-hidden .nav-logo { display: inline-block; }
 
         .mobile-trigger {
             position: fixed; top: 20px; left: 20px; z-index: 1200;
@@ -107,7 +101,6 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="15 18 9 12 15 6"></polyline></svg>
   </div>
   <div class="nav-logo">SHEPHERDNET</div>
-  
   <a href="#" id="dashboardBtn"><span>🏠</span> <span>Dashboard</span></a>
   <a href="#" class="active"><span>📋</span> <span>Registry</span></a>
   <a href="../list/settings.html"><span>⚙️</span> <span>Settings</span></a>
@@ -134,7 +127,6 @@
     authDomain: "fob-database-139d1.firebaseapp.com",
     projectId: "fob-database-139d1",
     storageBucket: "fob-database-139d1.firebasestorage.app",
-    messagingSenderId: "375165731354",
     appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
   };
 
@@ -142,88 +134,53 @@
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
 
-  // --- UI INTERACTION LOGIC ---
-  
-  // Desktop Sidebar Toggle
+  // Sidebar Toggles
   document.getElementById('sidebarToggle').onclick = (e) => {
     e.stopPropagation();
     document.body.classList.toggle('sidebar-hidden');
   };
 
-  // Mobile Menu Toggle
   document.getElementById('mobileMenuBtn').onclick = (e) => {
     e.stopPropagation();
     document.body.classList.toggle('mobile-open');
   };
 
-  // Close Mobile Menu when clicking outside
   document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768) {
-      const sidebar = document.getElementById('sidebar');
-      if (!sidebar.contains(e.target)) {
+      if (!document.getElementById('sidebar').contains(e.target)) {
         document.body.classList.remove('mobile-open');
       }
     }
   });
 
-  // Smart Dashboard Redirect
   document.getElementById('dashboardBtn').onclick = async (e) => {
     e.preventDefault();
     const user = auth.currentUser;
     if (!user) return;
-
-    // Check Master Admin
-    const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
-    if (adminSnap.exists()) {
-        window.location.href = "../admin/index.html";
-        return;
-    }
-
-    // Check Pastor
-    const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
-    if (pastorSnap.exists()) {
-        window.location.href = "../pastor/index.html";
-        return;
-    }
-
-    // Check Shepherd
-    const shepSnap = await getDoc(doc(db, "shepherds", user.uid));
-    if (shepSnap.exists()) {
-        window.location.href = "../shepherd/index.html";
-        return;
+    const collections = ["master_admin", "pastors", "shepherds"];
+    for (let coll of collections) {
+        const snap = await getDoc(doc(db, coll, user.uid));
+        if (snap.exists()) {
+            window.location.href = `../${coll === 'master_admin' ? 'admin' : coll === 'pastors' ? 'pastor' : 'shepherd'}/index.html`;
+            return;
+        }
     }
   };
 
-  // Sync Theme
-  const savedTheme = localStorage.getItem('theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', savedTheme);
-
-  // --- DATA LOADING LOGIC ---
-
   async function startApp(user) {
-    const headerTitle = document.getElementById('headerTitle');
-    
-    // Check Master Admin first
     const adminSnap = await getDoc(doc(db, "master_admin", user.uid));
     if (adminSnap.exists()) {
-      headerTitle.textContent = "Global Member Registry";
+      document.getElementById('headerTitle').textContent = "Global Member Registry";
       loadAdminView();
-      return;
-    }
-
-    // Check Pastor second
-    const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
-    if (pastorSnap.exists()) {
-      headerTitle.textContent = "Chapel Management";
-      loadPastorView(user.uid);
-      return;
-    }
-
-    // Check Shepherd third
-    const shepSnap = await getDoc(doc(db, "shepherds", user.uid));
-    if (shepSnap.exists()) {
-      headerTitle.textContent = "My Assigned Souls";
-      loadShepherdView(user.uid);
+    } else {
+      const pastorSnap = await getDoc(doc(db, "pastors", user.uid));
+      if (pastorSnap.exists()) {
+        document.getElementById('headerTitle').textContent = "Chapel Management";
+        loadPastorView(user.uid);
+      } else {
+        document.getElementById('headerTitle').textContent = "My Assigned Souls";
+        loadShepherdView(user.uid);
+      }
     }
   }
 
@@ -232,30 +189,34 @@
     const q = query(collection(db, "members"), orderBy("last_name"));
     const snaps = await getDocs(q);
     list.innerHTML = "";
-    snaps.forEach(m => renderMemberTab(list, { id: m.id, ...m.data() }));
+    
+    for (const m of snaps.docs) {
+        const data = m.data();
+        let addedBy = "Unknown";
+        
+        // Logical check: Find who added them
+        if (data.shepherdName) addedBy = `Shepherd: ${data.shepherdName}`;
+        else if (data.pastorName) addedBy = `Pastor: ${data.pastorName}`;
+
+        renderMemberTab(list, { id: m.id, ...data }, addedBy);
+    }
   }
 
   async function loadPastorView(pastorId) {
     const list = document.getElementById('list');
     const shepQ = query(collection(db, "shepherds"), where("assigned_pastor_id", "==", pastorId));
     const shepSnaps = await getDocs(shepQ);
-    
-    let shepherdMap = {};
-    shepSnaps.forEach(s => shepherdMap[s.id] = { name: s.data().full_name, members: [] });
+    let shepMap = {};
+    shepSnaps.forEach(s => shepMap[s.id] = s.data().full_name);
 
     const memQ = query(collection(db, "members"), where("pastorId", "==", pastorId));
     const memSnaps = await getDocs(memQ);
-    
-    let directMembers = [];
+    list.innerHTML = "";
     memSnaps.forEach(m => {
-      const data = { id: m.id, ...m.data() };
-      if (data.shepherdId && shepherdMap[data.shepherdId]) {
-        shepherdMap[data.shepherdId].members.push(data);
-      } else {
-        directMembers.push(data);
-      }
+        const data = m.data();
+        const addedBy = data.shepherdId ? `Shepherd: ${shepMap[data.shepherdId] || 'Assigned'}` : "Directly Added";
+        renderMemberTab(list, { id: m.id, ...data }, addedBy);
     });
-    renderGrouped(directMembers, shepherdMap);
   }
 
   async function loadShepherdView(shepherdId) {
@@ -263,41 +224,24 @@
     const q = query(collection(db, "members"), where("shepherdId", "==", shepherdId));
     const snaps = await getDocs(q);
     list.innerHTML = "";
-    snaps.forEach(m => renderMemberTab(list, { id: m.id, ...m.data() }));
+    snaps.forEach(m => renderMemberTab(list, { id: m.id, ...m.data() }, "Assigned to You"));
   }
 
-  function renderGrouped(direct, shepMap) {
-    const list = document.getElementById('list');
-    list.innerHTML = "";
-    if (direct.length > 0) {
-      renderHeader(list, "Directly Under Pastor");
-      direct.forEach(m => renderMemberTab(list, m));
-    }
-    for (const id in shepMap) {
-      renderHeader(list, `Shepherd: ${shepMap[id].name}`);
-      shepMap[id].members.forEach(m => renderMemberTab(list, m));
-    }
-  }
-
-  function renderHeader(container, text) {
-    const div = document.createElement('div');
-    div.className = 'group-header';
-    div.textContent = text;
-    container.appendChild(div);
-  }
-
-  function renderMemberTab(container, member) {
+  function renderMemberTab(container, member, subtext) {
     const tab = document.createElement('div');
     tab.className = 'member-tab';
     tab.onclick = () => window.location.href = `profile.html?id=${member.id}`;
     
-    const displayName = `${member.first_name || ""} ${member.last_name || ""}`.trim() || "Unknown Member";
+    const displayName = `${member.first_name || ""} ${member.last_name || ""}`.trim();
     tab.innerHTML = `
         <div class="member-info">
-          <div class="member-name">${displayName}</div>
-          <span class="status-tag">${member.status || 'No Status'}</span>
+          <div>
+            <span style="font-weight:600">${displayName}</span>
+            <span class="status-tag">${member.status || 'Active'}</span>
+          </div>
+          <div class="added-by">${subtext}</div>
         </div>
-        <div class="chevron">›</div>`;
+        <div style="opacity:0.3">›</div>`;
     container.appendChild(tab);
   }
 
