@@ -193,7 +193,13 @@
       try {
         const shepherdRef = doc(db, "shepherds", user.uid);
         const pastorRef = doc(db, "pastors", user.uid);
-        const [shepSnap, pastSnap] = await Promise.all([getDoc(shepherdRef), getDoc(pastorRef)]);
+        const adminRef = doc(db, "master_admin", user.uid); // Added Admin Ref
+
+        const [shepSnap, pastSnap, adminSnap] = await Promise.all([
+          getDoc(shepherdRef), 
+          getDoc(pastorRef),
+          getDoc(adminRef) // Added Admin Snap
+        ]);
 
         if (shepSnap.exists()) {
           sId = user.uid;
@@ -203,13 +209,20 @@
           pId = user.uid;
           sId = "direct_pastor_entry";
           roleDisplay.innerText = `Logged in as Pastor: ${pastSnap.data().full_name}`;
+        } else if (adminSnap.exists()) {
+          // Master Admin Logic
+          pId = user.uid; 
+          sId = "master_admin_entry";
+          roleDisplay.innerText = `Logged in as Master Admin: ${adminSnap.data().full_name}`;
         } else {
           roleDisplay.innerText = "Error: Role not found.";
           return;
         }
+        
         saveBtn.disabled = false;
         saveBtn.innerText = "Save Member Data";
       } catch (err) {
+        console.error(err);
         roleDisplay.innerText = "Connection Error.";
       }
     } else {
