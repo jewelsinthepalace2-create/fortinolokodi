@@ -80,117 +80,128 @@
     };
     
     const app = initializeApp(firebaseConfig);
-    // Ensure "fobrealdbase" is the correct name. If using default, use: getFirestore(app)
     const db = getFirestore(app, "fobrealdbase");
 
     async function loadGlobalDashboard() {
         try {
+            // 1. Fetch Collections
             const [pSnap, mSnap, aSnap] = await Promise.all([
                 getDocs(collection(db, "pastors")),
                 getDocs(collection(db, "members")),
                 getDocs(collection(db, "attendance"))
             ]);
 
-            // FIX 1: Include the .id in the data mapping
-            const allPastors = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            const allMembers = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            const allAttendance = aSnap.docs.map(d => d.data());
+            // IMPORTANT: Manually inject the Document ID into the object
+            const allPastors = pSnap.docs.map(d => ({ 
+                id: d.id, 
+                ...d.data() 
+            }));
+            
+            const allMembers = mSnap.docs.map(d => ({ 
+                id: d.id, 
+                ...d.data() 
+            }));
 
-            // 1. Calculate Global Stats
+            const allAttendance = aSnap.docs.map(d => ({
+                id: d.id, // This is the composite ID (memberID_eventID)
+                ...d.data()
+            }));
+
+            // 2. Global Calculations
             const total = allMembers.length;
             const established = allMembers.filter(m => m.status === "Established Member").length;
             const newConverts = total - established;
 
-            // 2. Render Maturity Pie Chart
-            new Chart(document.getElementById('maturityPie'), {
-                type: 'pie',
-                data: {
-                    labels: ['Established', 'New Converts'],
-                    datasets: [{ data: [established, newConverts], backgroundColor: ['#4facfe', '#ff4b5c'], borderWidth: 0 }]
-                },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
-            });
-            
-            // Render a dummy Conversion Chart to prevent blank spaces
-            new Chart(document.getElementById('conversionChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Growth', 'Target'],
-                    datasets: [{ data: [established, total], backgroundColor: ['#00ff88', '#222'], borderWidth: 0 }]
-                },
-                options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
-            });
+            renderPieChart(established, newConverts);
 
-            // 3. Process Leader Data
-            const leaderData = [];
-            allPastors.forEach(p => {
-                // FIX 2: Filter members using the Pastor's document ID
+            // 3. Leader Audit Logic
+            const leaderData = allPastors.map(p => {
+                // Now m.id exists because we injected d.id above
                 const chapelMembers = allMembers.filter(m => m.pastorId === p.id);
-                
-                // FIX 3: Filter attendance using Member IDs
-                const chapelAtt = allAttendance.filter(a => 
-                    chapelMembers.some(m => m.id === a.memberId) && a.status === "present"
-                );
-                
                 const mCount = chapelMembers.length;
-                const estCount = chapelMembers.filter(m => m.status === "Established Member").length;
-                const convRate = mCount > 0 ? Math.round((estCount / mCount) * 100) : 0;
-                const attRate = mCount > 0 ? (chapelAtt.length / mCount).toFixed(1) : 0;
 
-                leaderData.push({
-                    name: p.full_name,
+                // Match attendance records to these specific members
+                const presentRecords = allAttendance.filter(a => 
+                    chapelMembers.some(m => m.id === a.memberId) && 
+                    (a.status?.toLowerCase() === "present")
+                );
+
+                // Attendance Rate calculation (Present records vs total possible)
+                // Assuming we track the last 5 events
+                const attRate = mCount > 0 ? (presentRecords.length / (mCount * 5)) : 0;
+                const attPercent = Math.min(Math.round(attRate * 100), 100);
+
+                const estInChapel = chapelMembers.filter(m => m.status === "Established Member").length;
+                const convRate = mCount > 0 ? Math.round((estInChapel / mCount) * 100) : 0;
+
+                return {
+                    name: p.full_name || "Unknown",
                     chapel: p.chapel_name || 'Main',
                     members: mCount,
-                    attendance: parseFloat(attRate),
+                    attendance: attPercent,
                     conversion: convRate,
-                    status: attRate > 0.7 ? 'High' : attRate > 0.4 ? 'Medium' : 'Low'
-                });
+                    status: attPercent > 70 ? 'High' : attPercent > 40 ? 'Mid' : 'Low'
+                };
             });
 
-            renderAuditTable(leaderData.sort((a,b) => b.attendance - a.attendance));
-            renderAttendanceChart(leaderData);
+            renderAuditTable(leaderData.sort((a, b) => b.attendance - a.attendance));
+            renderAttendanceBar(leaderData);
 
         } catch (error) {
-            console.error("Error loading dashboard:", error);
+            console.error("Dashboard Error:", error);
         }
     }
 
+    // Helper to render the table
     function renderAuditTable(data) {
         const body = document.getElementById('auditBody');
-        body.innerHTML = ''; // Clear previous info
-        data.forEach((l, i) => {
-            body.innerHTML += `
-                <tr>
-                    <td>#${i+1}</td>
-                    <td><b>${l.name}</b><br><small style="opacity:0.5">${l.chapel}</small></td>
-                    <td>${l.members}</td>
-                    <td>${Math.round(l.attendance * 100)}%</td>
-                    <td>${l.conversion}%</td>
-                    <td><span class="rank-badge ${l.status.toLowerCase()}">${l.status}</span></td>
-                </tr>
-            `;
+        body.innerHTML = data.map((l, i) => `
+            <tr>
+                <td>#${i+1}</td>
+                <td><b>${l.name}</b><br><small style="opacity:0.5">${l.chapel}</small></td>
+                <td>${l.members}</td>
+                <td>${l.attendance}%</td>
+                <td>${l.conversion}%</td>
+                <td><span class="rank-badge ${l.status.toLowerCase()}">${l.status}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    // Helper for Pie Chart
+    function renderPieChart(est, newC) {
+        new Chart(document.getElementById('maturityPie'), {
+            type: 'pie',
+            data: {
+                labels: ['Established', 'New Converts'],
+                datasets: [{ data: [est, newC], backgroundColor: ['#4facfe', '#ff4b5c'], borderWidth: 0 }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
         });
     }
 
-    function renderAttendanceChart(data) {
+    // Helper for Bar Chart
+    function renderAttendanceBar(data) {
         new Chart(document.getElementById('attendanceBar'), {
             type: 'bar',
             data: {
                 labels: data.map(l => l.chapel),
                 datasets: [{
                     label: 'Attendance %',
-                    data: data.map(l => l.attendance * 100),
+                    data: data.map(l => l.attendance),
                     backgroundColor: '#4facfe'
                 }]
             },
             options: { 
-                scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } },
+                scales: { 
+                    y: { beginAtZero: true, max: 100, ticks: { color: '#fff' } }, 
+                    x: { ticks: { color: '#fff' } } 
+                },
                 plugins: { legend: { display: false } }
             }
         });
     }
 
     loadGlobalDashboard();
-</script>
+</script>>
 </body>
 </html>
