@@ -69,77 +69,102 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
         authDomain: "fob-database-139d1.firebaseapp.com", 
         projectId: "fob-database-139d1", 
-        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
+        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" 
+    };
+    
     const app = initializeApp(firebaseConfig);
+    // Ensure "fobrealdbase" is the correct name. If using default, use: getFirestore(app)
     const db = getFirestore(app, "fobrealdbase");
 
     async function loadGlobalDashboard() {
-        const [pSnap, mSnap, aSnap] = await Promise.all([
-            getDocs(collection(db, "pastors")),
-            getDocs(collection(db, "members")),
-            getDocs(collection(db, "attendance"))
-        ]);
+        try {
+            const [pSnap, mSnap, aSnap] = await Promise.all([
+                getDocs(collection(db, "pastors")),
+                getDocs(collection(db, "members")),
+                getDocs(collection(db, "attendance"))
+            ]);
 
-        const allMembers = mSnap.docs.map(d => d.data());
-        const allAttendance = aSnap.docs.map(d => d.data());
-        
-        // 1. Calculate Global Stats
-        const total = allMembers.length;
-        const established = allMembers.filter(m => m.status === "Established Member").length;
-        const newConverts = total - established;
+            // FIX 1: Include the .id in the data mapping
+            const allPastors = pSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const allMembers = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const allAttendance = aSnap.docs.map(d => d.data());
 
-        // 2. Render Maturity Pie Chart
-        new Chart(document.getElementById('maturityPie'), {
-            type: 'pie',
-            data: {
-                labels: ['Established', 'New Converts'],
-                datasets: [{ data: [established, newConverts], backgroundColor: ['#4facfe', '#ff4b5c'], borderWidth: 0 }]
-            },
-            options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
-        });
+            // 1. Calculate Global Stats
+            const total = allMembers.length;
+            const established = allMembers.filter(m => m.status === "Established Member").length;
+            const newConverts = total - established;
 
-        // 3. Process Leader Data (Ranking Pastors)
-        const leaderData = [];
-        pSnap.forEach(pDoc => {
-            const p = pDoc.data();
-            const chapelMembers = allMembers.filter(m => m.pastorId === pDoc.id);
-            const chapelAtt = allAttendance.filter(a => chapelMembers.some(m => m.memberId === a.memberId) && a.status === "present");
-            
-            const mCount = chapelMembers.length;
-            const estCount = chapelMembers.filter(m => m.status === "Established Member").length;
-            const convRate = mCount > 0 ? Math.round((estCount / mCount) * 100) : 0;
-            const attRate = mCount > 0 ? (chapelAtt.length / mCount).toFixed(1) : 0;
-
-            leaderData.push({
-                name: p.full_name,
-                chapel: p.chapel_name || 'Main',
-                members: mCount,
-                attendance: attRate,
-                conversion: convRate,
-                status: attRate > 0.7 ? 'High' : attRate > 0.4 ? 'Medium' : 'Low'
+            // 2. Render Maturity Pie Chart
+            new Chart(document.getElementById('maturityPie'), {
+                type: 'pie',
+                data: {
+                    labels: ['Established', 'New Converts'],
+                    datasets: [{ data: [established, newConverts], backgroundColor: ['#4facfe', '#ff4b5c'], borderWidth: 0 }]
+                },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
             });
-        });
+            
+            // Render a dummy Conversion Chart to prevent blank spaces
+            new Chart(document.getElementById('conversionChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Growth', 'Target'],
+                    datasets: [{ data: [established, total], backgroundColor: ['#00ff88', '#222'], borderWidth: 0 }]
+                },
+                options: { plugins: { legend: { position: 'bottom', labels: { color: '#fff' } } } }
+            });
 
-        // 4. Render Table and Attendance Bar Chart
-        renderAuditTable(leaderData.sort((a,b) => b.attendance - a.attendance));
-        renderAttendanceChart(leaderData);
+            // 3. Process Leader Data
+            const leaderData = [];
+            allPastors.forEach(p => {
+                // FIX 2: Filter members using the Pastor's document ID
+                const chapelMembers = allMembers.filter(m => m.pastorId === p.id);
+                
+                // FIX 3: Filter attendance using Member IDs
+                const chapelAtt = allAttendance.filter(a => 
+                    chapelMembers.some(m => m.id === a.memberId) && a.status === "present"
+                );
+                
+                const mCount = chapelMembers.length;
+                const estCount = chapelMembers.filter(m => m.status === "Established Member").length;
+                const convRate = mCount > 0 ? Math.round((estCount / mCount) * 100) : 0;
+                const attRate = mCount > 0 ? (chapelAtt.length / mCount).toFixed(1) : 0;
+
+                leaderData.push({
+                    name: p.full_name,
+                    chapel: p.chapel_name || 'Main',
+                    members: mCount,
+                    attendance: parseFloat(attRate),
+                    conversion: convRate,
+                    status: attRate > 0.7 ? 'High' : attRate > 0.4 ? 'Medium' : 'Low'
+                });
+            });
+
+            renderAuditTable(leaderData.sort((a,b) => b.attendance - a.attendance));
+            renderAttendanceChart(leaderData);
+
+        } catch (error) {
+            console.error("Error loading dashboard:", error);
+        }
     }
 
     function renderAuditTable(data) {
         const body = document.getElementById('auditBody');
+        body.innerHTML = ''; // Clear previous info
         data.forEach((l, i) => {
             body.innerHTML += `
                 <tr>
                     <td>#${i+1}</td>
                     <td><b>${l.name}</b><br><small style="opacity:0.5">${l.chapel}</small></td>
                     <td>${l.members}</td>
-                    <td>${l.attendance * 100}%</td>
+                    <td>${Math.round(l.attendance * 100)}%</td>
                     <td>${l.conversion}%</td>
                     <td><span class="rank-badge ${l.status.toLowerCase()}">${l.status}</span></td>
                 </tr>
@@ -153,13 +178,13 @@
             data: {
                 labels: data.map(l => l.chapel),
                 datasets: [{
-                    label: 'Attendance Rate',
+                    label: 'Attendance %',
                     data: data.map(l => l.attendance * 100),
                     backgroundColor: '#4facfe'
                 }]
             },
             options: { 
-                scales: { y: { beginAtZero: true, ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } },
+                scales: { y: { beginAtZero: true, max: 100, ticks: { color: '#fff' } }, x: { ticks: { color: '#fff' } } },
                 plugins: { legend: { display: false } }
             }
         });
