@@ -4,275 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intelligence | ShepherdNet Pro</title>
-    <link rel="icon" type="image/png" href="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<style>
-        :root {
-            --primary: #4facfe;
-            --accent: #00f2fe;
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.08);
-            --sidebar-width: 260px;
-            --text-main: #ffffff;
-            --text-dim: rgba(255, 255, 255, 0.6);
-        }
+    <style>
+        :root { 
+            --primary: #4facfe; --accent: #00f2fe; --bg: #0f172a; 
+            --glass: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08); 
+            --sidebar-width: 260px; --text-main: #ffffff; --text-dim: rgba(255, 255, 255, 0.6);
+        }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text-main); font-family: 'Poppins', sans-serif; display: flex; height: 100vh; overflow: hidden; }
 
-        body {
-            background: var(--bg);
-            color: var(--text-main);
-            font-family: 'Poppins', sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
+        .sidebar { 
+            width: var(--sidebar-width); background: rgba(15, 23, 42, 0.95); border-right: 1px solid var(--border); 
+            display: flex; flex-direction: column; padding: 30px 20px; backdrop-filter: blur(20px); 
+            transition: transform 0.3s ease; z-index: 1000;
+        }
 
-        /* Sidebar */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: rgba(15, 23, 42, 0.95);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 30px 20px;
-            backdrop-filter: blur(20px);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
+        .logo { font-weight: 600; font-size: 1.4rem; margin-bottom: 40px; display: flex; align-items: center; gap: 12px; color: var(--primary); }
+        .nav-group { flex: 1; }
+        .nav-item { 
+            padding: 14px 18px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            color: var(--text-dim); text-decoration: none; transition: 0.2s; margin-bottom: 8px; font-size: 0.95rem;
+        }
+        .nav-item.active { background: var(--glass); color: white; border: 1px solid var(--border); }
 
-        .logo {
-            font-weight: 600;
-            font-size: 1.4rem;
-            margin-bottom: 40px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--primary);
-        }
+        .main-content { flex: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { margin-bottom: 40px; }
+        header h1 { font-size: 1.8rem; }
 
-        .nav-group {
-            flex: 1;
-        }
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-card { background: var(--glass); border: 1px solid var(--border); padding: 20px; border-radius: 20px; }
+        .chart-card h3 { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; text-align: center; margin-bottom: 15px; }
 
-        .nav-item {
-            padding: 14px 18px;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text-dim);
-            text-decoration: none;
-            transition: 0.2s;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
+        .card { background: var(--glass); border: 1px solid var(--border); padding: 20px; border-radius: 20px; }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
 
-        .nav-item.active {
-            background: var(--glass);
-            color: white;
-            border: 1px solid var(--border);
-        }
+        .search-box { position: relative; flex: 1; min-width: 250px; }
+        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-dim); }
+        .search-box input { 
+            width: 100%; background: var(--glass); border: 1px solid var(--border); 
+            padding: 12px 12px 12px 40px; border-radius: 12px; color: white; 
+            font-family: inherit; outline: none; transition: 0.3s;
+        }
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 40px;
-            scroll-behavior: smooth;
-        }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { text-align: left; font-size: 0.7rem; color: var(--text-dim); padding: 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 10px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        
+        .rank-badge { padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.7rem; }
+        .high { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
+        .mid { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
+        .low { background: rgba(255, 75, 92, 0.1); color: #ff4b5c; }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        /* Sidebar Responsive Logic */
+.sidebar {
+    position: fixed; /* Fixed so it can slide over content */
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%); /* Hidden by default */
+    z-index: 2000;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.3);
+}
 
-        header {
-            margin-bottom: 40px;
-        }
+/* When sidebar is active */
+body.sidebar-open .sidebar {
+    transform: translateX(0);
+}
 
-        header h1 {
-            font-size: 1.8rem;
-        }
+/* Floating Menu Toggle */
+.menu-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    z-index: 2100;
+    box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+    border: none;
+}
 
-        /* Analytics */
-        .analytics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+/* Glass Overlay for "Empty Space" */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1500;
+    display: none;
+    opacity: 0;
+    transition: 0.3s;
+}
 
-        .chart-card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 20px;
-            border-radius: 20px;
-        }
+body.sidebar-open .overlay {
+    display: block;
+    opacity: 1;
+}
 
-        .chart-card h3 {
-            font-size: 0.75rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        /* Tables */
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 20px;
-            border-radius: 20px;
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .search-box i {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dim);
-        }
-
-        .search-box input {
-            width: 100%;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 12px 12px 12px 40px;
-            border-radius: 12px;
-            color: white;
-            font-family: inherit;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 500px;
-        }
-
-        th {
-            text-align: left;
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            padding: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 15px 10px;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
-
-        .rank-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.7rem;
-        }
-
-        .high { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
-        .mid  { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
-        .low  { background: rgba(255, 75, 92, 0.1); color: #ff4b5c; }
-
-        /* Sidebar Responsive */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            transform: translateX(-100%);
-            z-index: 2000;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 20px 0 50px rgba(0, 0, 0, 0.3);
-        }
-
-        body.sidebar-open .sidebar {
-            transform: translateX(0);
-        }
-
-        /* Floating Menu Button */
-        .menu-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-            cursor: pointer;
-            z-index: 2100;
-            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
-            border: none;
-        }
-
-        /* Overlay */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(4px);
-            z-index: 1500;
-            display: none;
-            opacity: 0;
-            transition: 0.3s;
-        }
-
-        body.sidebar-open .overlay {
-            display: block;
-            opacity: 1;
-        }
-
-        /* Desktop */
-        @media (min-width: 1024px) {
-            .sidebar {
-                position: relative;
-                transform: translateX(0);
-                box-shadow: none;
-            }
-
-            .menu-btn,
-            .overlay {
-                display: none !important;
-            }
-        }
-    </style>
+/* Desktop Fix: Keep sidebar visible on large screens */
+@media (min-width: 1024px) {
+    .sidebar {
+        position: relative;
+        transform: translateX(0);
+        box-shadow: none;
+    }
+    .menu-btn, .overlay { display: none !important; }
+    body.sidebar-open .main-content { opacity: 1; }
+}
+    </style>
 </head>
 <body>
     <button class="menu-btn" id="menuBtn">
@@ -284,8 +139,8 @@
     <aside class="sidebar" id="sidebar">
         <div class="logo">ShepherdNet</div>
         <nav class="nav-group">
-            <a href="#" class="nav-item active"><i class="fa-solid fa-chart-pie"></i> Leaderboards</a>
-            <div class="nav-item" id="btnSettings"><i class="fa-solid fa-sliders"></i> Settings</div>
+            <a href="#" class="nav-item active"><i class="fa-solid fa-chart-pie"></i> Intelligence</a>
+            <a href="../admin/index.html" class="nav-item" id="btnDashboard"><i class="fa-solid fa-sliders"> Dashboard</a>
         </nav>
         <div class="nav-item" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
     </aside>
@@ -357,30 +212,68 @@
             renderTable(filtered);
         };
 
-        async function loadGlobalDashboard() {
-            try {
-                const [pSnap, mAdminSnap, mSnap, aSnap] = await Promise.all([
-                    getDocs(collection(db, "pastors")),
-                    getDocs(collection(db, "master_admin")),
-                    getDocs(collection(db, "members")),
-                    getDocs(collection(db, "attendance"))
-                ]);
+     async function loadGlobalDashboard() {
+    try {
+        const user = auth.currentUser;
+        
+        // 1. Identify User Role & Data Scope
+        const [pDoc, adminDoc] = await Promise.all([
+            getDoc(doc(db, "pastors", user.uid)),
+            getDoc(doc(db, "master_admin", user.uid))
+        ]);
 
-                const leaderRegistry = {};
-                pSnap.docs.forEach(d => leaderRegistry[d.id] = { name: d.data().full_name, chapel: d.data().chapel_name || "Branch" });
-                mAdminSnap.docs.forEach(d => leaderRegistry[d.id] = { name: d.data().full_name + " (Admin)", chapel: d.data().chapel_name || "HQ" });
+        let viewMode = "shepherd"; // Default
+        let userContext = null;
 
-                const allMembers = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                const allAttendance = aSnap.docs.map(d => d.data());
-                const uniqueEventDates = [...new Set(allAttendance.map(a => a.date))].sort();
-                const today = new Date();
+        if (adminDoc.exists()) {
+            viewMode = "admin";
+            userContext = adminDoc.data();
+        } else if (pDoc.exists()) {
+            viewMode = "pastor";
+            userContext = pDoc.data();
+        }
 
-                globalAuditData = Object.keys(leaderRegistry).map(id => {
-    const info = leaderRegistry[id];
-    const members = allMembers.filter(m => m.pastorId === id);
-    
-    // Show empty chapels with 0 metrics instead of hiding them
-    if (members.length === 0) return { ...info, members: 0, attendance: 0, conversion: 0, status: 'Low' };
+        // 2. Fetch Data
+        const [pSnap, mAdminSnap, mSnap, aSnap] = await Promise.all([
+            getDocs(collection(db, "pastors")),
+            getDocs(collection(db, "master_admin")),
+            getDocs(collection(db, "members")),
+            getDocs(collection(db, "attendance"))
+        ]);
+
+        const allMembers = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const allAttendance = aSnap.docs.map(d => d.data());
+        const uniqueEventDates = [...new Set(allAttendance.map(a => a.date))].sort();
+
+        // 3. Filter Leader Registry Based on Role
+        let leaderRegistry = {};
+        
+        if (viewMode === "admin") {
+            // Admin sees all Pastors and Admins
+            pSnap.docs.forEach(d => leaderRegistry[d.id] = { name: d.data().full_name, chapel: d.data().chapel_name || "Branch" });
+            mAdminSnap.docs.forEach(d => leaderRegistry[d.id] = { name: d.data().full_name + " (Admin)", chapel: "HQ" });
+        } else if (viewMode === "pastor") {
+            // Pastor sees ONLY themselves
+            leaderRegistry[user.uid] = { name: userContext.full_name, chapel: userContext.chapel_name };
+            
+            // OPTIONAL: If you have a 'shepherds' collection, you would fetch and add them here
+            // filtered by: where('pastorId', '==', user.uid)
+        } else {
+            // Shepherd sees ONLY themselves
+            // Inherit chapel name from their assigned pastor
+            const myPastor = pSnap.docs.find(p => p.id === userContext?.pastorId);
+            leaderRegistry[user.uid] = { 
+                name: userContext?.full_name || "Shepherd", 
+                chapel: myPastor?.data()?.chapel_name || "Assigned Chapel" 
+            };
+        }
+
+        // 4. Process Metrics (Same calculation logic as before, but on filtered leaderRegistry)
+        globalAuditData = Object.keys(leaderRegistry).map(id => {
+            const info = leaderRegistry[id];
+            const members = allMembers.filter(m => m.pastorId === id); // Or shepherdId logic
+            
+            if (members.length === 0) return { ...info, members: 0, attendance: 0, conversion: 0, status: 'Low' };
 
     let totalPossible = 0;
     let totalPresent = 0;
@@ -424,23 +317,27 @@
         ? Math.round((establishedCount / eligibleForConversionCount) * 100) 
         : 0;
     
-    return { 
-        ...info, 
-        members: members.length, 
-        attendance: attRate, 
-        conversion: convRate,
-        status: attRate > 70 ? 'High' : attRate > 40 ? 'Mid' : 'Low'
-    };
-}).sort((a,b) => b.attendance - a.attendance);
+   return { 
+                ...info, 
+                members: members.length, 
+                attendance: attRate, 
+                conversion: convRate,
+                status: attRate > 70 ? 'High' : attRate > 40 ? 'Mid' : 'Low'
+            };
+        });
 
-                document.getElementById('syncText').innerHTML = `<i class="fa-solid fa-shield-check" style="color:#00ff88"></i> Global Audit • Fair Metrics Active`;
-                renderTable(globalAuditData);
-                renderCharts(allMembers, globalAuditData);
-            } catch (err) {
-                console.error(err);
-                document.getElementById('syncText').innerText = "Error loading network data.";
-            }
-        }
+        // 5. Update UI
+        const headerTitle = viewMode === "admin" ? "Global Network Intelligence" : `${leaderRegistry[user.uid].chapel} Statistics`;
+        document.querySelector('header h1').innerText = headerTitle;
+        
+        renderTable(globalAuditData);
+        renderCharts(allMembers.filter(m => leaderRegistry[m.pastorId]), globalAuditData);
+
+    } catch (err) {
+        console.error(err);
+        document.getElementById('syncText').innerText = "Access Denied or Connection Error.";
+    }
+}
 
         function renderTable(data) {
             const body = document.getElementById('auditBody');
@@ -508,5 +405,3 @@ document.querySelectorAll('.nav-item').forEach(item => {
     </script>
 </body>
 </html>
-
-
