@@ -75,7 +75,40 @@
         /* --- MOBILE MEDIA QUERIES --- */
         @media (max-width: 768px) {
             .mobile-nav-trigger { display: block; }
-            .menu-toggle { display: none; }
+            @media (max-width: 768px) {
+    .menu-toggle { display: none !important; }
+}
+            /* --- UPDATED SIDEBAR TOGGLE --- */
+.menu-toggle {
+    position: absolute;
+    /* Positioned relative to the sidebar container */
+    right: 10px; 
+    top: 30px;
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #0f172a;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1100;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* When sidebar is hidden (collapsed), move it to the edge so it's visible */
+body.sidebar-hidden .menu-toggle {
+    right: -15px;
+    transform: rotate(180deg);
+}
+
+/* Optional: Hide the toggle slightly when sidebar is open until hovered */
+body:not(.sidebar-hidden) nav:not(:hover) .menu-toggle {
+    opacity: 0.3;
+    transform: scale(0.8);
+}
             
             nav {
                 position: fixed; left: -100%; top: 0;
