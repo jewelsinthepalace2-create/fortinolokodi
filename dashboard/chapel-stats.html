@@ -62,12 +62,82 @@
         .high { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
         .mid { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
         .low { background: rgba(255, 75, 92, 0.1); color: #ff4b5c; }
+
+        /* Sidebar Responsive Logic */
+.sidebar {
+    position: fixed; /* Fixed so it can slide over content */
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%); /* Hidden by default */
+    z-index: 2000;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.3);
+}
+
+/* When sidebar is active */
+body.sidebar-open .sidebar {
+    transform: translateX(0);
+}
+
+/* Floating Menu Toggle */
+.menu-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    z-index: 2100;
+    box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+    border: none;
+}
+
+/* Glass Overlay for "Empty Space" */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1500;
+    display: none;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+body.sidebar-open .overlay {
+    display: block;
+    opacity: 1;
+}
+
+/* Desktop Fix: Keep sidebar visible on large screens */
+@media (min-width: 1024px) {
+    .sidebar {
+        position: relative;
+        transform: translateX(0);
+        box-shadow: none;
+    }
+    .menu-btn, .overlay { display: none !important; }
+    body.sidebar-open .main-content { opacity: 1; }
+}
     </style>
 </head>
 <body>
+    <button class="menu-btn" id="menuBtn">
+    <i class="fa-solid fa-bars-staggered"></i>
+</button>
+
+<div class="overlay" id="overlay"></div>
 
     <aside class="sidebar" id="sidebar">
-        <div class="logo">💠 ShepherdNet</div>
+        <div class="logo">ShepherdNet</div>
         <nav class="nav-group">
             <a href="#" class="nav-item active"><i class="fa-solid fa-chart-pie"></i> Intelligence</a>
             <div class="nav-item" id="btnSettings"><i class="fa-solid fa-sliders"></i> Settings</div>
@@ -161,52 +231,62 @@
                 const today = new Date();
 
                 globalAuditData = Object.keys(leaderRegistry).map(id => {
-                    const info = leaderRegistry[id];
-                    const members = allMembers.filter(m => m.pastorId === id);
-                    if (members.length === 0) return null;
+    const info = leaderRegistry[id];
+    const members = allMembers.filter(m => m.pastorId === id);
+    
+    // Show empty chapels with 0 metrics instead of hiding them
+    if (members.length === 0) return { ...info, members: 0, attendance: 0, conversion: 0, status: 'Low' };
 
-                    let totalPossible = 0;
-                    let totalPresent = 0;
+    let totalPossible = 0;
+    let totalPresent = 0;
+    let eligibleForConversionCount = 0;
+    let establishedCount = 0;
 
-                    members.forEach(m => {
-                        // 1. TIMESTAMP HANDLING
-                        let joinDate;
-                        if (m.registration_date?.toDate) joinDate = m.registration_date.toDate();
-                        else if (m.registration_date?.seconds) joinDate = new Date(m.registration_date.seconds * 1000);
-                        else joinDate = new Date("2024-01-01");
+    members.forEach(m => {
+        // 1. Get Date Joined
+        let joinDate;
+        if (m.registration_date?.toDate) joinDate = m.registration_date.toDate();
+        else if (m.registration_date?.seconds) joinDate = new Date(m.registration_date.seconds * 1000);
+        else joinDate = new Date("2024-01-01");
 
-                        // 2. 30-DAY GRACE PERIOD CALCULATION
-                        const eligibilityDate = new Date(joinDate);
-                        eligibilityDate.setDate(joinDate.getDate() + 30);
+        const joinDateStr = joinDate.toISOString().split('T')[0];
 
-                        // 3. FAIR ATTENDANCE LOGIC
-                        if (today >= eligibilityDate) {
-                            const dateStr = eligibilityDate.toISOString().split('T')[0];
-                            const eligibleEvents = uniqueEventDates.filter(d => d >= dateStr);
-                            
-                            totalPossible += eligibleEvents.length;
-                            totalPresent += allAttendance.filter(att => 
-                                att.memberId === m.id && 
-                                att.status?.toLowerCase() === "present" &&
-                                att.date >= dateStr
-                            ).length;
-                        }
-                    });
+        // 2. Attendance Logic (Count from JOIN DATE)
+        // Filters events to only those occurring on or after they joined
+        const eligibleEvents = uniqueEventDates.filter(d => d >= joinDateStr);
+        totalPossible += eligibleEvents.length;
+        
+        totalPresent += allAttendance.filter(att => 
+            att.memberId === m.id && 
+            att.status?.toLowerCase() === "present" &&
+            att.date >= joinDateStr
+        ).length;
 
-                    const attRate = totalPossible > 0 ? Math.min(Math.round((totalPresent / totalPossible) * 100), 100) : 0;
-                    
-                    // 4. CONVERSION PIPELINE LOGIC (Status Field)
-                    const establishedCount = members.filter(m => m.status === "Established Member").length;
-                    const convRate = Math.round((establishedCount / members.length) * 100);
-                    
-                    return { 
-                        ...info, 
-                        members: members.length, 
-                        attendance: attRate, 
-                        conversion: convRate,
-                        status: attRate > 70 ? 'High' : attRate > 40 ? 'Mid' : 'Low'
-                    };
-                }).filter(x => x !== null).sort((a,b) => b.attendance - a.attendance);
+        // 3. Conversion Logic (30-DAY GRACE PERIOD)
+        const daysInChurch = (today - joinDate) / (1000 * 60 * 60 * 24);
+        if (daysInChurch > 30) {
+            eligibleForConversionCount++;
+            if (m.status === "Established Member") {
+                establishedCount++;
+            }
+        }
+    });
+
+    const attRate = totalPossible > 0 ? Math.min(Math.round((totalPresent / totalPossible) * 100), 100) : 0;
+    
+    // Calculate conversion based only on those past the 30-day window
+    const convRate = eligibleForConversionCount > 0 
+        ? Math.round((establishedCount / eligibleForConversionCount) * 100) 
+        : 0;
+    
+    return { 
+        ...info, 
+        members: members.length, 
+        attendance: attRate, 
+        conversion: convRate,
+        status: attRate > 70 ? 'High' : attRate > 40 ? 'Mid' : 'Low'
+    };
+}).sort((a,b) => b.attendance - a.attendance);
 
                 document.getElementById('syncText').innerHTML = `<i class="fa-solid fa-shield-check" style="color:#00ff88"></i> Global Audit • Fair Metrics Active`;
                 renderTable(globalAuditData);
@@ -260,8 +340,26 @@
 
         onAuthStateChanged(auth, user => {
             if (user) loadGlobalDashboard();
-            else window.location.href = "login.html";
+            else window.location.href = "index.html";
         });
+        const menuBtn = document.getElementById('menuBtn');
+const overlay = document.getElementById('overlay');
+const body = document.body;
+
+// Toggle Sidebar
+menuBtn.onclick = () => {
+    body.classList.toggle('sidebar-open');
+};
+
+// COLLAPSE ON TOUCH EMPTY SPACE
+overlay.onclick = () => {
+    body.classList.remove('sidebar-open');
+};
+
+// Also collapse when a nav item is clicked (useful for mobile navigation)
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.onclick = () => body.classList.remove('sidebar-open');
+});
     </script>
 </body>
 </html>
