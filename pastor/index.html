@@ -218,7 +218,7 @@
                         if (data.profile_pic) document.getElementById('nav-avatar').src = data.profile_pic;
                     }
 
-                    const sQuery = query(collection(db, "pastors"), where("assigned_pastor_id", "==", user.uid));
+                    const sQuery = query(collection(db, "shepherds"), where("assigned_pastor_id", "==", user.uid));
                     const mQuery = query(collection(db, "members"), where("pastorId", "==", user.uid));
                     
                     const [sCount, mCount] = await Promise.all([
