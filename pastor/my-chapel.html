@@ -88,64 +88,162 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-    import { initializeFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-    const firebaseConfig = { /* Your Config Here */ };
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", 
+        authDomain: "fob-database-139d1.firebaseapp.com", 
+        projectId: "fob-database-139d1", 
+        storageBucket: "fob-database-139d1.firebasestorage.app", 
+        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" 
+    };
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = initializeFirestore(app, { experimentalForceLongPolling: true }, "fobrealdbase");
+    const db = getFirestore(app);
 
     onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
-
-        // 1. Fetch Pastor's Info
-        const pDoc = await getDoc(doc(db, "pastors", user.uid));
-        if (pDoc.exists()) {
-            document.getElementById('chapelTitle').innerText = pDoc.data().chapel_name || "My Chapel";
-            document.getElementById('pastorWelcome').innerText = `Performance metrics for Pastor ${pDoc.data().full_name}`;
+        if (!user) {
+            window.location.href = "dashboard.html";
+            return;
         }
 
-        // 2. Fetch Shepherds and Members
-        const [sSnap, mSnap] = await Promise.all([
-            getDocs(query(collection(db, "shepherds"), where("pastorId", "==", user.uid))),
-            getDocs(query(collection(db, "members"), where("pastorId", "==", user.uid)))
-        ]);
+        try {
+            // 1. Fetch Pastor's Info
+            const pDoc = await getDoc(doc(db, "pastors", user.uid));
+            if (pDoc.exists()) {
+                const pData = pDoc.data();
+                document.getElementById('chapelTitle').innerText = pData.chapel_name || "My Chapel";
+                document.getElementById('pastorWelcome').innerText = `Performance metrics for Pastor ${pData.full_name || 'Pastor'}`;
+            }
 
-        const shepherds = {};
-        sSnap.forEach(d => shepherds[d.id] = { name: d.data().full_name, total: 0, established: 0 });
+            // 2. Initialize Counters & Time Thresholds
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        let establishedCount = 0;
-        let totalCount = 0;
+            let totalCount = 0;
+            let establishedCount = 0;
+            let eligibleForEst = 0;    // Members > 30 days old
+            let successfulEst = 0;      // Members > 30 days old WHO ARE established
+            
+            // 3. Setup Growth Chart Buckets (Last 6 Months ending Jan 2026)
+            const monthLabels = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"];
+            const monthlyData = [0, 0, 0, 0, 0, 0]; 
 
-        mSnap.forEach(doc => {
-            const m = doc.data();
-            totalCount++;
-            const isEst = (m.status === "Established Member");
-            if (isEst) establishedCount++;
+            // 4. Fetch Shepherds & Members
+            const [sSnap, mSnap] = await Promise.all([
+                getDocs(query(collection(db, "shepherds"), where("assigned_pastor_id", "==", user.uid))),
+                getDocs(query(collection(db, "members"), where("pastorId", "==", user.uid)))
+            ]);
 
-            if (m.shepherdId && shepherds[m.shepherdId]) {
-                shepherds[m.shepherdId].total++;
-                if (isEst) shepherds[m.shepherdId].established++;
+            const shepherds = {};
+            sSnap.forEach(d => {
+                shepherds[d.id] = { name: d.data().full_name, total: 0, established: 0, newSouls: 0 };
+            });
+
+            // 5. Process Member Data
+            mSnap.forEach(doc => {
+                const m = doc.data();
+                totalCount++;
+
+                const isEstablished = (m.status === "Established Member");
+                if (isEstablished) establishedCount++;
+
+                // Date Calculations
+                if (m.createdAt) {
+                    const joinDate = m.createdAt.toDate();
+                    
+                    // Maturity Logic (30-day rule)
+                    if (joinDate < thirtyDaysAgo) {
+                        eligibleForEst++;
+                        if (isEstablished) successfulEst++;
+                    }
+
+                    // Growth Chart Logic
+                    const monthIndex = joinDate.getMonth(); // 0=Jan, 11=Dec
+                    // Mapping Jan 2026 as index 5, Dec 2025 as index 4, etc.
+                    if (joinDate.getFullYear() === 2026 && monthIndex === 0) monthlyData[5]++;
+                    else if (joinDate.getFullYear() === 2025) {
+                        if (monthIndex >= 7) monthlyData[monthIndex - 7]++;
+                    }
+                }
+
+                // Shepherd Mapping
+                if (m.shepherdId && shepherds[m.shepherdId]) {
+                    shepherds[m.shepherdId].total++;
+                    if (isEstablished) shepherds[m.shepherdId].established++;
+                    
+                    const joinDate = m.createdAt ? m.createdAt.toDate() : new Date();
+                    if (joinDate > thirtyDaysAgo) shepherds[m.shepherdId].newSouls++;
+                }
+            });
+
+            // 6. Update UI Stats
+            document.getElementById('totalMembers').innerText = totalCount;
+            
+            // Calculate 30-Day Success Rate
+            const successRate = eligibleForEst > 0 ? Math.round((successfulEst / eligibleForEst) * 100) : 0;
+            document.getElementById('maturityRate').innerText = `${successRate}%`;
+
+            // 7. Render Charts
+            renderGrowthChart(monthLabels, monthlyData);
+            renderMaturityChart(establishedCount, totalCount - establishedCount);
+
+            // 8. Render Shepherd Table
+            renderShepherdTable(shepherds);
+
+        } catch (error) {
+            console.error("Performance Page Error:", error);
+        }
+    });
+
+    function renderGrowthChart(labels, data) {
+        new Chart(document.getElementById('growthChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'New Souls',
+                    data: data,
+                    borderColor: '#4facfe',
+                    backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    x: { ticks: { color: 'rgba(255,255,255,0.5)' }, grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
             }
         });
+    }
 
-        // Update UI Stats
-        document.getElementById('totalMembers').innerText = totalCount;
-        const rate = totalCount > 0 ? Math.round((establishedCount / totalCount) * 100) : 0;
-        document.getElementById('maturityRate').innerText = `${rate}%`;
-
-        // 3. Render Maturity Chart
+    function renderMaturityChart(est, converts) {
         new Chart(document.getElementById('maturityChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Established', 'Converts'],
-                datasets: [{ data: [establishedCount, totalCount - establishedCount], backgroundColor: ['#00ff88', '#ff4b5c'], borderWidth: 0 }]
+                datasets: [{
+                    data: [est, converts],
+                    backgroundColor: ['#00ff88', '#ff4b5c'],
+                    borderWidth: 0
+                }]
             },
-            options: { plugins: { legend: { position: 'bottom', labels: { color: 'white' } } } }
+            options: {
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: 'white', boxWidth: 12, font: { size: 10 } } }
+                }
+            }
         });
+    }
 
-        // 4. Render Shepherd Table
+    function renderShepherdTable(shepherds) {
         const tbody = document.getElementById('shepherdBody');
+        tbody.innerHTML = ''; // Clear loading state
+        
         Object.values(shepherds).forEach(s => {
             const sRate = s.total > 0 ? Math.round((s.established / s.total) * 100) : 0;
             const colorClass = sRate > 70 ? 'retention-high' : sRate > 40 ? 'retention-mid' : 'retention-low';
@@ -155,11 +253,12 @@
                     <td>${s.name}</td>
                     <td>${s.total}</td>
                     <td>${s.established}</td>
+                    <td>${s.newSouls}</td>
                     <td class="${colorClass}">${sRate}%</td>
                 </tr>
             `;
         });
-    });
+    }
 </script>
 </body>
 </html>
