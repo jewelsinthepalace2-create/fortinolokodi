@@ -71,7 +71,7 @@
         <a id="dashLink" href="#" style="color:var(--primary); text-decoration:none; border:1px solid var(--primary); padding:6px 14px; border-radius:8px; font-size:0.8rem;">Dashboard</a>
     </div>
 
-    <div class="card">
+    <div class="add-card">
         <h3 style="margin:0 0 15px 0; color:var(--primary); font-size:1rem;">Target New Soul</h3>
         <input type="text" id="invName" placeholder="Full Name">
         <div style="display:flex; gap:10px;">
@@ -171,18 +171,16 @@
         if (aSnap.exists()) { 
             myRole = 'master_admin'; 
             link.href = "../admin/index.html"; 
-            roleText.innerText = "Global Oversight"; 
+            roleText.innerText = "Personal Targets (Admin)"; // Explicit label change
         } 
         else if (pSnap.exists()) { 
             myRole = 'pastor'; 
             link.href = "../pastor/index.html"; 
-            // Display Chapel Name or Default
             roleText.innerText = pSnap.data().chapel_name || pSnap.data().branch_name || "Pastor's Mandate"; 
         } 
         else if (sSnap.exists()) { 
             myRole = 'shepherd'; 
             link.href = "../shepherd/index.html"; 
-            // Display Chapel Name or Default
             roleText.innerText = sSnap.data().chapel_name || "Shepherd's Watch"; 
         } 
         else { 
@@ -219,7 +217,6 @@
                 }
             });
 
-            // If no events in 48h, grab the single next one just to show "Locked" status
             if (ACTIVE_EVENTS.length === 0) {
                 const nextQ = query(collection(db, "events"), where("date", ">=", now), orderBy("date", "asc"), limit(1));
                 const nextSnap = await getDocs(nextQ);
@@ -239,7 +236,7 @@
         } catch(e) { console.error(e); }
     }
 
-    // --- 3. LOAD LISTS (Loops through Active Events) ---
+    // --- 3. LOAD LISTS (Strict Personal Filter) ---
     async function loadInvitees() {
         const mainArea = document.getElementById('eventsArea');
         mainArea.innerHTML = "";
@@ -249,16 +246,21 @@
             return;
         }
 
-        // Fetch Invitees Once
         let q;
-        if(myRole === 'shepherd') q = query(collection(db, "invitees"), where("shepherdId", "==", currentUser.uid));
-        else q = query(collection(db, "invitees"), where("pastorId", "==", currentUser.uid));
+        // HERE IS THE CRITICAL LOGIC FIX:
+        // If Master Admin OR Pastor -> filter by pastorId = my UID
+        // If Shepherd -> filter by shepherdId = my UID
+        if (myRole === 'master_admin' || myRole === 'pastor') {
+            q = query(collection(db, "invitees"), where("pastorId", "==", currentUser.uid));
+        } else {
+            q = query(collection(db, "invitees"), where("shepherdId", "==", currentUser.uid));
+        }
         
         const invSnap = await getDocs(q);
         const allInvitees = invSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(d => d.status !== 'graduated');
 
         if(allInvitees.length === 0) {
-            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No invitees in your list.</p>";
+            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No invitees found in your personal list.</p>";
             return;
         }
 
@@ -276,7 +278,6 @@
                 return;
             }
 
-            // FILTER: Check history array if 'eventId' exists
             const pendingInvitees = allInvitees.filter(inv => {
                 if (!inv.history) return true;
                 const alreadyReported = inv.history.some(h => h.eventId === evt.id);
