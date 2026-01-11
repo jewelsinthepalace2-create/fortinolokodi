@@ -160,7 +160,7 @@
         } else { location.href = "index.html"; }
     });
 
-    // --- 1. DETERMINE ROLE & CHAPEL NAME ---
+    // --- 1. DETERMINE ROLE ---
     async function determineRole(uid) {
         const link = document.getElementById('dashLink');
         const roleText = document.getElementById('roleDisplay');
@@ -171,12 +171,12 @@
         if (aSnap.exists()) { 
             myRole = 'master_admin'; 
             link.href = "../admin/index.html"; 
-            roleText.innerText = "Personal Targets (Admin)"; // Explicit label change
+            roleText.innerText = "Personal Targets (Admin)"; 
         } 
         else if (pSnap.exists()) { 
             myRole = 'pastor'; 
             link.href = "../pastor/index.html"; 
-            roleText.innerText = pSnap.data().chapel_name || pSnap.data().branch_name || "Pastor's Mandate"; 
+            roleText.innerText = pSnap.data().chapel_name || "Pastor's Mandate"; 
         } 
         else if (sSnap.exists()) { 
             myRole = 'shepherd'; 
@@ -217,6 +217,7 @@
                 }
             });
 
+            // If no events in 48h, grab the single next one just to show "Locked" status
             if (ACTIVE_EVENTS.length === 0) {
                 const nextQ = query(collection(db, "events"), where("date", ">=", now), orderBy("date", "asc"), limit(1));
                 const nextSnap = await getDocs(nextQ);
@@ -236,20 +237,19 @@
         } catch(e) { console.error(e); }
     }
 
-    // --- 3. LOAD LISTS (Strict Personal Filter) ---
+    // --- 3. LOAD LISTS (THE FIX: Check Events FIRST) ---
     async function loadInvitees() {
         const mainArea = document.getElementById('eventsArea');
         mainArea.innerHTML = "";
 
+        // If no events exist at all, say so.
         if(ACTIVE_EVENTS.length === 0) {
-            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No upcoming service found.</p>";
+            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No upcoming service found in database.</p>";
             return;
         }
 
+        // Fetch Invitees (User specific)
         let q;
-        // HERE IS THE CRITICAL LOGIC FIX:
-        // If Master Admin OR Pastor -> filter by pastorId = my UID
-        // If Shepherd -> filter by shepherdId = my UID
         if (myRole === 'master_admin' || myRole === 'pastor') {
             q = query(collection(db, "invitees"), where("pastorId", "==", currentUser.uid));
         } else {
@@ -259,10 +259,8 @@
         const invSnap = await getDocs(q);
         const allInvitees = invSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(d => d.status !== 'graduated');
 
-        if(allInvitees.length === 0) {
-            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No invitees found in your personal list.</p>";
-            return;
-        }
+        // *** FIX: DO NOT RETURN HERE IF LIST IS EMPTY ***
+        // We still need to loop through events to show the Locked Banners.
 
         // RENDER EACH EVENT SECTION
         ACTIVE_EVENTS.forEach(evt => {
@@ -278,13 +276,19 @@
                 return;
             }
 
+            // FILTER: Check history array if 'eventId' exists
             const pendingInvitees = allInvitees.filter(inv => {
                 if (!inv.history) return true;
                 const alreadyReported = inv.history.some(h => h.eventId === evt.id);
                 return !alreadyReported;
             });
 
-            if (pendingInvitees.length === 0) return;
+            // If the event is OPEN but there are no invitees (either because user has none, or all reported)
+            if (pendingInvitees.length === 0) {
+                // Optional: Show empty state per event?
+                // For now, we skip, so "All reports submitted" shows at bottom.
+                return; 
+            }
 
             const dateStr = evt.date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
             
@@ -318,7 +322,7 @@
         });
 
         if (mainArea.innerHTML === "") {
-            mainArea.innerHTML = "<p style='text-align:center; padding:40px; opacity:0.6;'>All reports submitted! 🎉</p>";
+            mainArea.innerHTML = "<p style='text-align:center; padding:40px; opacity:0.6;'>No active targets for upcoming services.<br><small>Add a soul to get started.</small></p>";
         }
     }
 
