@@ -6,153 +6,233 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); --gold: #ffd700; }
+        :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); --gold: #ffd700; --red: #ff4b5c; }
         body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; display: flex; justify-content: center; padding: 20px; }
-        .card { background: var(--glass); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 100%; max-width: 450px; }
+        .card { background: var(--glass); backdrop-filter: blur(10px); padding: 30px; border-radius: 20px; border: 1px solid var(--border); width: 100%; max-width: 500px; }
         h2 { color: var(--primary); margin-bottom: 5px; text-align: center; }
         p { text-align: center; font-size: 0.8rem; opacity: 0.6; margin-bottom: 25px; }
         
-        .section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-top: 20px; display: block; letter-spacing: 1px; }
-        input, select, button { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; outline: none; box-sizing: border-box; }
+        .section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gold); margin-top: 25px; display: block; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 15px; }
+        input, select, button { width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; outline: none; box-sizing: border-box; }
         
-        .btn-auto { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #0f172a; font-weight: 600; cursor: pointer; border: none; }
-        .btn-auto:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-special { background: transparent; border: 1px solid var(--primary); color: var(--primary); font-weight: 600; cursor: pointer; }
-        .btn-special:hover { background: var(--primary); color: #000; }
+        .btn-auto { background: linear-gradient(45deg, #ff4b5c, #ff9068); color: white; font-weight: 600; cursor: pointer; border: none; }
+        .btn-auto:hover { opacity: 0.9; }
         
-        .back-link { display: block; text-align: center; color: var(--primary); text-decoration: none; font-size: 0.8rem; margin-top: 15px; }
-        hr { border: 0; border-top: 1px solid var(--border); margin: 25px 0; }
+        .btn-special { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #0f172a; font-weight: 600; cursor: pointer; border: none; }
+        .btn-special:hover { opacity: 0.9; }
+        
+        .back-link { display: block; text-align: center; color: var(--primary); text-decoration: none; font-size: 0.8rem; margin-top: 20px; }
+        
+        .info-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; font-size: 0.75rem; color: #ccc; margin-bottom: 15px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Event Manager</h2>
-    <p>ShepherdNet Automation</p>
+    <h2>2026 Event Manager</h2>
+    <p>Database Automation System</p>
 
-    <span class="section-label">System Automation</span>
-    <button id="btnAutoGenerate" class="btn-auto">Auto-Generate 2026 Schedule</button>
-    <small id="status-msg" style="font-size: 0.65rem; opacity: 0.5; display: block; text-align: center;">This will set all Sunday, Wednesday, Friday, Dawn, and Monthly events for 2026.</small>
-
-    <hr>
-
-    <span class="section-label">Create Special Event</span>
-    <input type="text" id="specialEventName" placeholder="Event Name (e.g. Youth Camp)">
+    <span class="section-label">Create Special Event (Overwrites Default)</span>
+    <div class="info-box">
+        Adding an event here will <b>replace</b> any default service scheduled for that specific day (e.g., adding a "Camp" on Sunday will delete "Sunday Service").
+    </div>
+    <input type="text" id="specialEventName" placeholder="Event Name (e.g. Easter Convention)">
     <input type="date" id="specialEventDate">
-    <select id="specialCategory">
-        <option value="Special Event">Special Event</option>
-        <option value="Conference">Conference</option>
-        <option value="Vigil">Vigil</option>
-    </select>
-    <button id="btnCreateSpecial" class="btn-special">Add Special Event</button>
+    <div style="display:flex; gap:10px;">
+        <input type="time" id="specialEventTime" value="18:00">
+        <select id="specialCategory">
+            <option value="Special">Special</option>
+            <option value="Convention">Convention</option>
+            <option value="Camp">Camp</option>
+        </select>
+    </div>
+    <button id="btnCreateSpecial" class="btn-special">Add & Overwrite</button>
 
-    <a href="index.html" class="back-link">← Back to Registry</a>
+    <span class="section-label">System Reset & Generation</span>
+    <div class="info-box" style="border-left: 3px solid var(--red);">
+        <b>Warning:</b> This button wipes ALL events for 2026 and generates the fresh default schedule:
+        <ul style="margin:5px 0 5px 15px; padding:0;">
+            <li>Sun (8am): Sunday Service</li>
+            <li>Wed (6pm): Brake Fuel Prayers</li>
+            <li>Fri (6pm): Freeflow Service</li>
+            <li>Last Sat (7am): Prayer Secrets</li>
+        </ul>
+    </div>
+    <button id="btnAutoGenerate" class="btn-auto">⚠️ Reset & Generate Full 2026</button>
+    <small id="status-msg" style="font-size: 0.7rem; opacity: 0.7; display: block; text-align: center; margin-top:5px;"></small>
+
+    <a href="index.html" class="back-link">← Return to Dashboard</a>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, doc, writeBatch } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, writeBatch, getDocs, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
-        authDomain: "fob-database-139d1.firebaseapp.com",
-        projectId: "fob-database-139d1",
-        storageBucket: "fob-database-139d1.firebasestorage.app",
-        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", authDomain: "fob-database-139d1.firebaseapp.com", projectId: "fob-database-139d1", storageBucket: "fob-database-139d1.firebasestorage.app", appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app, "fobrealdbase");
     const auth = getAuth(app);
 
-    // Verify Auth State
     onAuthStateChanged(auth, (user) => {
-        if (!user) {
-            alert("Unauthorized. Redirecting to login...");
-            window.location.href = "../index.html";
-        }
+        if (!user) { alert("Please login first."); window.location.href = "index.html"; }
     });
 
-    // --- 1. SPECIAL EVENT CREATION ---
+    // --- 1. SPECIAL EVENT (WITH OVERWRITE LOGIC) ---
     document.getElementById('btnCreateSpecial').onclick = async () => {
         const name = document.getElementById('specialEventName').value;
-        const date = document.getElementById('specialEventDate').value;
+        const dateStr = document.getElementById('specialEventDate').value; // YYYY-MM-DD
+        const timeStr = document.getElementById('specialEventTime').value;
         const cat = document.getElementById('specialCategory').value;
 
-        if(!name || !date) return alert("Fill Name and Select Date");
+        if(!name || !dateStr) return alert("Please details.");
 
         try {
-            await addDoc(collection(db, "events"), {
-                name: name,
-                date: date,
+            // 1. Create timestamp object
+            const fullDate = new Date(`${dateStr}T${timeStr}:00`);
+            
+            // 2. CHECK FOR CONFLICTS (The Overwrite Logic)
+            // We search for any event with the same 'dateString'
+            const q = query(collection(db, "events"), where("dateString", "==", dateStr));
+            const conflictSnap = await getDocs(q);
+
+            const batch = writeBatch(db);
+
+            // Delete existing events on that day
+            if (!conflictSnap.empty) {
+                conflictSnap.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                console.log(`Deleted ${conflictSnap.size} conflicting events.`);
+            }
+
+            // 3. Add New Event
+            const newDocRef = doc(collection(db, "events"));
+            batch.set(newDocRef, {
+                title: name,
+                name: name, // storing both for compatibility
+                date: fullDate, // Firestore Timestamp
+                dateString: dateStr, // Helper for querying
                 category: cat,
-                timestamp: new Date(),
-                createdBy: auth.currentUser.uid
+                createdBy: auth.currentUser.uid,
+                createdAt: new Date()
             });
-            alert("Special Event Created!");
-            window.location.reload();
-        } catch (e) { alert("Error: " + e.message); }
+
+            await batch.commit();
+            alert(`Success! "${name}" added. (Overwrote ${conflictSnap.size} defaults)`);
+            
+            // Clear inputs
+            document.getElementById('specialEventName').value = "";
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
+        }
     };
 
-    // --- 2. AUTO GENERATION LOGIC (BATCHED) ---
+    // --- 2. MASSIVE AUTO-GENERATION (WITH WIPE) ---
     document.getElementById('btnAutoGenerate').onclick = async () => {
-        if(!confirm("Generate all recurring events for 2026? This will process in batches.")) return;
-        
+        if(!confirm("⚠️ ARE YOU SURE?\n\nThis will DELETE ALL existing events in the database and generate a fresh schedule for 2026.\n\nThis cannot be undone.")) return;
+
         const btn = document.getElementById('btnAutoGenerate');
         const msg = document.getElementById('status-msg');
-        btn.innerText = "Processing...";
         btn.disabled = true;
 
-        const start = new Date(2026, 0, 1); 
-        const end = new Date(2026, 11, 31);
-        
-        let currentDate = new Date(start);
-        const eventsList = [];
-
-        // Build the list of events
-        while (currentDate <= end) {
-            const day = currentDate.getDay(); 
-            const dateStr = currentDate.toISOString().split('T')[0];
+        try {
+            // --- STEP A: WIPE EXISTING EVENTS ---
+            msg.innerText = "Cleaning database (Deleting old events)...";
+            const allEvents = await getDocs(collection(db, "events"));
             
-            eventsList.push({ name: "Dawn Prayers", date: dateStr, category: "Daily" });
-
-            if (day === 0) eventsList.push({ name: "Sunday Service", date: dateStr, category: "Sunday Service" });
-            if (day === 3) eventsList.push({ name: "Wednesday Brake Fuel Prayers", date: dateStr, category: "Mid-Week" });
-            if (day === 5) eventsList.push({ name: "Friday Freeflow", date: dateStr, category: "Mid-Week" });
-
-            if (day === 6) {
-                let nextWeek = new Date(currentDate);
-                nextWeek.setDate(currentDate.getDate() + 7);
-                if (nextWeek.getMonth() !== currentDate.getMonth()) {
-                    eventsList.push({ name: "Prayer Secrets Conference", date: dateStr, category: "Conference" });
+            // Delete in batches of 400
+            let deleteBatch = writeBatch(db);
+            let count = 0;
+            for (const doc of allEvents.docs) {
+                deleteBatch.delete(doc.ref);
+                count++;
+                if (count >= 400) {
+                    await deleteBatch.commit();
+                    deleteBatch = writeBatch(db);
+                    count = 0;
                 }
             }
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
+            if (count > 0) await deleteBatch.commit();
 
-        try {
-            // Firestore batches are limited to 500 writes
+
+            // --- STEP B: GENERATE NEW SCHEDULE ---
+            msg.innerText = "Generating 2026 Schedule...";
+            const eventsList = [];
+            const start = new Date(2026, 0, 1); // Jan 1 2026
+            const end = new Date(2026, 11, 31); // Dec 31 2026
+            let curr = new Date(start);
+
+            while (curr <= end) {
+                const day = curr.getDay(); // 0=Sun, 1=Mon...
+                const dateStr = curr.toISOString().split('T')[0];
+                
+                // 1. SUNDAY SERVICE (8:00 AM)
+                if (day === 0) {
+                    const d = new Date(curr); d.setHours(8, 0, 0);
+                    eventsList.push({ title: "Sunday Service", date: d, dateString: dateStr, category: "Service" });
+                }
+
+                // 2. WEDNESDAY BRAKE FUEL (6:00 PM)
+                if (day === 3) {
+                    const d = new Date(curr); d.setHours(18, 0, 0);
+                    eventsList.push({ title: "Wednesday Brake Fuel Prayers", date: d, dateString: dateStr, category: "Prayer" });
+                }
+
+                // 3. FRIDAY FREEFLOW (6:00 PM)
+                if (day === 5) {
+                    const d = new Date(curr); d.setHours(18, 0, 0);
+                    eventsList.push({ title: "Freeflow Service", date: d, dateString: dateStr, category: "Service" });
+                }
+
+                curr.setDate(curr.getDate() + 1);
+            }
+
+            // 4. LAST SATURDAY (PRAYER SECRETS - 7:00 AM)
+            for (let month = 0; month < 12; month++) {
+                // Start at the last day of the month
+                let d = new Date(2026, month + 1, 0); 
+                // Walk backwards until we hit Saturday (6)
+                while (d.getDay() !== 6) {
+                    d.setDate(d.getDate() - 1);
+                }
+                // Set time to 7am
+                d.setHours(7, 0, 0);
+                const dStr = d.toISOString().split('T')[0];
+                eventsList.push({ title: "Prayer Secrets Conference", date: d, dateString: dStr, category: "Conference" });
+            }
+
+            // --- STEP C: WRITE NEW EVENTS ---
             const chunkSize = 400; 
             for (let i = 0; i < eventsList.length; i += chunkSize) {
                 const batch = writeBatch(db);
                 const chunk = eventsList.slice(i, i + chunkSize);
                 
                 chunk.forEach(ev => {
-                    const newDocRef = doc(collection(db, "events"));
-                    batch.set(newDocRef, { ...ev, timestamp: new Date(), createdBy: auth.currentUser.uid });
+                    const newRef = doc(collection(db, "events"));
+                    // Store 'name' AND 'title' to ensure compatibility with all your scripts
+                    batch.set(newRef, { 
+                        ...ev, 
+                        name: ev.title, 
+                        createdAt: new Date(),
+                        createdBy: auth.currentUser.uid 
+                    });
                 });
 
                 msg.innerText = `Saving batch ${Math.ceil((i+chunkSize)/chunkSize)}...`;
                 await batch.commit();
             }
 
-            alert(`Success! Generated ${eventsList.length} events.`);
+            msg.innerText = "Done!";
+            alert(`Successfully generated ${eventsList.length} events for 2026.`);
             window.location.href = "index.html";
-        } catch (e) { 
-            alert("Batch Error: " + e.message); 
-            btn.innerText = "Auto-Generate 2026 Schedule";
+
+        } catch (e) {
+            console.error(e);
+            alert("Error: " + e.message);
             btn.disabled = false;
+            msg.innerText = "Error occurred.";
         }
     };
 </script>
