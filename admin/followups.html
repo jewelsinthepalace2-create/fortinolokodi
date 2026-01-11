@@ -2,119 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Global Intelligence | ShepherdNet</title>
+    <title>War Room | ShepherdNet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); --green: #00ff88; --red: #ff4b5c; --gold: #ffd700; }
         body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; padding: 20px; padding-bottom: 80px; }
-        .container { max-width: 1000px; margin: 0 auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
-        h1 { margin: 0; font-size: 1.4rem; }
-        select { background: #1e293b; color: white; border: 1px solid var(--primary); padding: 8px 12px; border-radius: 8px; font-family: inherit; cursor: pointer; outline: none; font-size: 0.9rem; }
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
+        .event-badge { background: linear-gradient(90deg, rgba(79, 172, 254, 0.2), rgba(0, 242, 254, 0.2)); border: 1px solid var(--primary); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; color: var(--primary); font-weight: bold; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
-        @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        /* KPI STATS */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .kpi-card { background: var(--glass); border: 1px solid var(--border); padding: 20px; border-radius: 15px; text-align: center; }
+        .kpi-val { font-size: 2rem; font-weight: 700; display: block; line-height: 1; margin-bottom: 5px; }
+        .kpi-lbl { font-size: 0.75rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; }
 
-        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 20px; backdrop-filter: blur(10px); margin-bottom: 25px; }
-        .card-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7; margin-bottom: 15px; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        /* TABLE CONTROLS */
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input.search-bar { flex: 1; background: #1e293b; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: white; outline: none; min-width: 200px; }
+        select.filter-box { background: #1e293b; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: white; outline: none; cursor: pointer; }
 
-        .kpi-row { display: flex; gap: 15px; margin-bottom: 20px; }
-        .kpi-box { flex: 1; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; text-align: center; }
-        .kpi-val { font-size: 1.5rem; font-weight: bold; display: block; }
-        .kpi-lbl { font-size: 0.6rem; opacity: 0.6; }
+        /* DATA TABLE */
+        .table-container { background: var(--glass); border: 1px solid var(--border); border-radius: 15px; overflow-x: auto; backdrop-filter: blur(10px); }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { text-align: left; padding: 15px; background: rgba(255,255,255,0.02); font-size: 0.75rem; text-transform: uppercase; opacity: 0.7; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
 
-        /* GROUPED TARGETS STYLES */
-        .leader-section { margin-top: 20px; margin-bottom: 10px; }
-        .leader-header { color: var(--gold); font-weight: bold; font-size: 0.9rem; margin-bottom: 10px; border-left: 3px solid var(--gold); padding-left: 10px; }
+        /* STATUS BADGES */
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; text-transform: uppercase; }
+        .st-present { background: rgba(0, 255, 136, 0.15); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.3); }
+        .st-absent { background: rgba(255, 75, 92, 0.15); color: var(--red); border: 1px solid rgba(255, 75, 92, 0.3); }
+        .st-expected { background: rgba(255, 215, 0, 0.15); color: var(--gold); border: 1px solid rgba(255, 215, 0, 0.3); }
         
-        .target-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-        .target-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 12px; border-radius: 10px; position: relative; }
-        .target-name { font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 4px; }
-        .target-meta { font-size: 0.7rem; opacity: 0.6; display: block; margin-bottom: 8px; }
-        .effort-badge { font-size: 0.65rem; padding: 3px 6px; border-radius: 4px; background: rgba(0,0,0,0.3); color: var(--gold); font-family: monospace; display: inline-block; }
-        .probability-dot { height: 6px; width: 6px; border-radius: 50%; position: absolute; top: 12px; right: 12px; }
-
-        .table-card { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { text-align: left; opacity: 0.5; padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.7rem; letter-spacing: 1px; }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.85rem; vertical-align: top; }
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; }
-        .pill-present { background: rgba(0, 255, 136, 0.1); color: var(--green); }
-        .pill-absent { background: rgba(255, 75, 92, 0.1); color: var(--red); }
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-        
-        .notes-list { max-height: 300px; overflow-y: auto; }
-        .note-item { background: rgba(255, 75, 92, 0.05); border-left: 3px solid var(--red); padding: 10px; margin-bottom: 8px; border-radius: 4px; }
-        .note-text { font-size: 0.8rem; color: #ffcccb; font-style: italic; }
-        .note-author { font-size: 0.7rem; opacity: 0.6; margin-top: 4px; display: block; }
+        .role-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <div>
-            <h1>Global Intelligence</h1>
-            <p id="eventLabel" style="opacity:0.6; font-size: 0.8rem; margin-top:4px;">Connecting...</p>
-        </div>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <select id="timeFilter" onchange="window.updateTimeframe()">
-                <option value="auto" selected>Auto (Past 5 Events)</option>
-                <option value="week">Last 1 Week</option>
-                <option value="1">Last 1 Month</option>
-                <option value="3">Last 3 Months</option>
-                <option value="6">Last 6 Months</option>
-                <option value="12">Last 1 Year</option>
-            </select>
-            <a href="index.html" style="color:var(--primary); text-decoration:none; border:1px solid var(--border); padding:8px 16px; border-radius:8px; font-size:0.8rem;">Exit</a>
-        </div>
+        <h1>War Room</h1>
+        <div id="eventDisplay" class="event-badge">Locating Next Event...</div>
+        <a href="index.html" style="color:var(--primary); text-decoration:none; border:1px solid var(--border); padding:8px 16px; border-radius:8px; font-size:0.8rem;">Exit</a>
     </header>
 
-    <div class="dashboard-grid">
-        <div class="card">
-            <span class="card-title">Growth & Retention Trends</span>
-            <div class="kpi-row">
-                <div class="kpi-box"><span class="kpi-val" id="avgExpected">-</span><span class="kpi-lbl">AVG EXPECTED</span></div>
-                <div class="kpi-box"><span class="kpi-val" id="avgActual" style="color:var(--green)">-</span><span class="kpi-lbl">AVG ACTUAL</span></div>
-                <div class="kpi-box"><span class="kpi-val" id="retentionRate">-</span><span class="kpi-lbl">RETENTION</span></div>
-            </div>
-            <div style="height:200px; width:100%;"><canvas id="trendChart"></canvas></div>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <span class="kpi-val" id="valExpected" style="color:white">-</span>
+            <span class="kpi-lbl">Total Expected</span>
         </div>
-
-        <div class="card">
-            <span class="card-title">Challenge Log</span>
-            <div class="notes-list" id="notesArea">
-                <p style="text-align:center; opacity:0.5; padding:20px;">Loading...</p>
-            </div>
+        <div class="kpi-card">
+            <span class="kpi-val" id="valPresent" style="color:var(--green)">-</span>
+            <span class="kpi-lbl">Total Present</span>
         </div>
-    </div>
-
-    <div class="card" style="border-color:var(--primary);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span class="card-title" style="color:var(--primary); border:none; margin:0;">🎯 TARGETS FOR NEXT SERVICE (<span id="nextSundayDate">...</span>)</span>
-            <button onclick="window.print()" style="background:none; border:1px solid var(--border); color:white; cursor:pointer; padding:4px 10px; border-radius:5px; font-size:0.7rem;">Print</button>
+        <div class="kpi-card">
+            <span class="kpi-val" id="valAbsent" style="color:var(--red)">-</span>
+            <span class="kpi-lbl">Absent / Pending</span>
         </div>
-        
-        <div style="margin-top:15px;" id="targetArea">
-            <p style="opacity:0.5;">Loading targets...</p>
+        <div class="kpi-card">
+            <span class="kpi-val" id="valPerf" style="color:var(--primary)">-</span>
+            <span class="kpi-lbl">Performance</span>
         </div>
     </div>
 
-    <div class="card table-card">
-        <span class="card-title">Registry History: Most Recent Service</span>
+    <div class="controls">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search name, pastor, or hostel..." onkeyup="filterTable()">
+        <select id="statusFilter" class="filter-box" onchange="filterTable()">
+            <option value="all">Show All</option>
+            <option value="present">Present</option>
+            <option value="absent">Absent</option>
+            <option value="expected">Expected (Pending)</option>
+        </select>
+        <select id="roleFilter" class="filter-box" onchange="filterTable()">
+            <option value="all">All Roles</option>
+            <option value="member">Members</option>
+            <option value="invitee">Invitees</option>
+        </select>
+    </div>
+
+    <div class="table-container">
         <table>
-            <thead><tr><th width="30%">NAME / ROLE</th><th width="20%">EFFORT</th><th width="15%">STATUS</th><th width="35%">NOTE</th></tr></thead>
-            <tbody id="registryBody"><tr><td colspan="4" style="text-align:center; padding:40px; opacity:0.5;">Waiting for data...</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th width="20%">Name / Role</th>
+                    <th width="15%">Contact / Hostel</th>
+                    <th width="20%">Shepherd / Leader</th>
+                    <th width="15%">Pastor / Branch</th>
+                    <th width="15%">Status</th>
+                    <th width="15%">Last Update</th>
+                </tr>
+            </thead>
+            <tbody id="masterTableBody">
+                <tr><td colspan="6" style="text-align:center; padding:40px; opacity:0.5;">Loading Intelligence...</td></tr>
+            </tbody>
         </table>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, limit, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, limit, orderBy, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", authDomain: "fob-database-139d1.firebaseapp.com", projectId: "fob-database-139d1", storageBucket: "fob-database-139d1.firebasestorage.app", appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
@@ -122,227 +115,206 @@
     const db = getFirestore(app, "fobrealdbase");
     const auth = getAuth(app);
 
-    let GLOBAL_EVENTS = []; let GLOBAL_ATT = []; let GLOBAL_MEM = []; let GLOBAL_INV = [];
-    let LEADER_MAP = {}; // Unified list of all leaders
+    let MASTER_LIST = []; 
+    let PHONEBOOK = {}; 
+    let TARGET_EVENT = null;
 
-    onAuthStateChanged(auth, (user) => { if (user) init(); });
+    onAuthStateChanged(auth, (user) => { if (user) init(); else location.href = "index.html"; });
 
     async function init() {
         try {
-            // 1. FETCH ALL LEADERSHIP COLLECTIONS (The Fix for "Unknown Leader")
-            const [shepSnap, pastSnap, adminSnap] = await Promise.all([
-                getDocs(collection(db, "shepherds")),
-                getDocs(collection(db, "pastors")),
-                getDocs(collection(db, "master_admin"))
-            ]);
+            // 1. Build Phonebook (ID -> Name) for display
+            await buildPhonebook();
 
-            // Build Unified Leader Phonebook
-            const addToMap = (snap) => snap.forEach(d => {
-                const data = d.data();
-                LEADER_MAP[d.id] = data.full_name || `${data.first_name||''} ${data.last_name||''}`.trim() || "Unknown";
-            });
-            addToMap(shepSnap); addToMap(pastSnap); addToMap(adminSnap);
-
-            // 2. FETCH EVENTS
-            const eventSnap = await getDocs(query(collection(db, "events"), orderBy("date", "desc"), limit(100)));
-            if (eventSnap.empty) { document.getElementById('eventLabel').innerText = "Database Empty."; return; }
-
-            // Filter Dawn Prayers
-            GLOBAL_EVENTS = eventSnap.docs.map(d => {
-                const data = d.data();
-                const jsDate = (data.date && data.date.toDate) ? data.date.toDate() : new Date(data.date);
-                const title = data.name || data.title || "Service";
-                return { id: d.id, ...data, title: title, jsDate: jsDate };
-            }).filter(e => !e.title.toLowerCase().includes("dawn prayer"));
-
-            GLOBAL_EVENTS.sort((a, b) => a.jsDate - b.jsDate);
-
-            // 3. FETCH DATA
-            const [attSnap, memSnap, invSnap] = await Promise.all([
-                getDocs(collection(db, "attendance")),
-                getDocs(collection(db, "members")),
-                getDocs(collection(db, "invitees"))
-            ]);
+            // 2. Find Target Event
+            const now = new Date();
+            const q = query(collection(db, "events"), where("date", ">=", now), orderBy("date", "asc"), limit(10));
+            const evSnap = await getDocs(q);
             
-            GLOBAL_ATT = attSnap.docs.map(d => ({id:d.id, ...d.data()}));
-            GLOBAL_MEM = memSnap.docs.map(d => ({id:d.id, ...d.data()}));
-            GLOBAL_INV = invSnap.docs.map(d => ({id:d.id, ...d.data()}));
+            if(!evSnap.empty) {
+                // Find first non-dawn event
+                const valid = evSnap.docs.find(d => !((d.data().title||d.data().name||"").toLowerCase().includes("dawn")));
+                if (valid) {
+                    const d = valid.data();
+                    TARGET_EVENT = { id: valid.id, title: d.title || d.name, date: d.date.toDate() };
+                }
+            }
 
-            // 4. RENDER
-            renderGroupedTargets();
-            window.updateTimeframe(); 
+            // Fallback if no future event, get the last past event (Review Mode)
+            if(!TARGET_EVENT) {
+                const pastQ = query(collection(db, "events"), orderBy("date", "desc"), limit(1));
+                const pastSnap = await getDocs(pastQ);
+                if(!pastSnap.empty) {
+                    const d = pastSnap.docs[0].data();
+                    TARGET_EVENT = { id: pastSnap.docs[0].id, title: d.title || d.name, date: d.date.toDate() };
+                }
+            }
 
-        } catch (error) {
-            console.error(error);
-            document.getElementById('eventLabel').innerText = "Error Loading Data.";
+            if(TARGET_EVENT) {
+                document.getElementById('eventDisplay').innerText = `🎯 ${TARGET_EVENT.title} (${TARGET_EVENT.date.toLocaleDateString()})`;
+                loadMasterList();
+            } else {
+                document.getElementById('eventDisplay').innerText = "No Scheduled Events";
+                document.getElementById('masterTableBody').innerHTML = "<tr><td colspan='6' style='text-align:center'>No events found in database.</td></tr>";
+            }
+
+        } catch(e) { console.error(e); }
+    }
+
+    async function buildPhonebook() {
+        const collections = ["shepherds", "pastors", "master_admin"];
+        for(const col of collections) {
+            const snap = await getDocs(collection(db, col));
+            snap.forEach(d => {
+                const data = d.data();
+                PHONEBOOK[d.id] = data.full_name || `${data.first_name||''} ${data.last_name||''}`.trim() || "Unknown";
+            });
         }
     }
 
-    // --- GROUPED TARGETS BY LEADER ---
-    function renderGroupedTargets() {
-        const d = new Date(); d.setDate(d.getDate() + (7 - d.getDay()) % 7);
-        document.getElementById('nextSundayDate').innerText = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    async function loadMasterList() {
+        MASTER_LIST = [];
 
-        const container = document.getElementById('targetArea');
-        const activeTargets = GLOBAL_INV.filter(i => i.status !== 'graduated');
+        // A. FETCH MEMBERS (List 1)
+        // Members are checked against the 'attendance' collection
+        const memSnap = await getDocs(collection(db, "members"));
+        const attSnap = await getDocs(collection(db, "attendance")); // Get all attendance (we filter in memory for speed on small datasets)
         
-        if(activeTargets.length === 0) {
-            container.innerHTML = "<p style='text-align:center; opacity:0.5'>No active targets found.</p>";
+        memSnap.forEach(doc => {
+            const m = doc.data();
+            // Check attendance for this specific event
+            // Logic: Does an attendance record exist where memberId == m.id AND eventId == TARGET_EVENT.id?
+            const record = attSnap.docs.find(a => {
+                const ad = a.data();
+                return ad.memberId === doc.id && (ad.eventId === TARGET_EVENT.id || (ad.timestamp && ad.timestamp.toDate().toDateString() === TARGET_EVENT.date.toDateString()));
+            });
+
+            let status = 'expected';
+            if (record) {
+                const s = record.data().status.toLowerCase();
+                if (s.includes('present')) status = 'present';
+                else if (s.includes('absent')) status = 'absent';
+            }
+
+            MASTER_LIST.push({
+                name: m.full_name,
+                contact: m.phone || "-",
+                hostel: m.hostel || m.residence || "-",
+                role: 'member',
+                shepherdId: m.shepherdId,
+                pastorId: m.pastorId,
+                status: status,
+                note: record ? (record.data().notes || "") : ""
+            });
+        });
+
+        // B. FETCH INVITEES (List 2)
+        const invSnap = await getDocs(collection(db, "invitees"));
+        invSnap.forEach(doc => {
+            const i = doc.data();
+            if(i.status === 'graduated') return; // Don't show graduated
+
+            // Check history for this event
+            let status = 'expected';
+            let note = "";
+            
+            if (i.history && Array.isArray(i.history)) {
+                const match = i.history.find(h => h.eventId === TARGET_EVENT.id);
+                if (match) {
+                    if (match.status === 'honoured') status = 'present';
+                    else if (match.status === 'declined') status = 'absent';
+                    note = match.reason || "";
+                }
+            }
+
+            MASTER_LIST.push({
+                name: i.fullName,
+                contact: i.phone || "-",
+                hostel: i.hostel || "-",
+                role: 'invitee',
+                shepherdId: i.shepherdId,
+                pastorId: i.pastorId,
+                status: status,
+                note: note
+            });
+        });
+
+        renderTable(MASTER_LIST);
+        updateKPIs(MASTER_LIST);
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('masterTableBody');
+        if(data.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>No data found.</td></tr>";
             return;
         }
 
-        // Group by shepherdId
-        const groups = {};
-        activeTargets.forEach(t => {
-            const sId = t.shepherdId || 'unknown';
-            if(!groups[sId]) groups[sId] = [];
-            groups[sId].push(t);
-        });
+        tbody.innerHTML = data.map(row => {
+            // Map IDs to Names
+            const shepName = PHONEBOOK[row.shepherdId] || "Unassigned";
+            const pastName = PHONEBOOK[row.pastorId] || "-";
+            
+            // Status Styling
+            let pillClass = "st-expected";
+            if (row.status === 'present') pillClass = "st-present";
+            if (row.status === 'absent') pillClass = "st-absent";
 
-        let fullHtml = "";
-        
-        // Loop through leaders
-        Object.keys(groups).forEach(leaderId => {
-            const leaderName = LEADER_MAP[leaderId] || "Unassigned / Unknown Leader";
-            const targets = groups[leaderId];
-
-            const cardsHtml = targets.map(t => {
-                const effort = (t.calls || 0) + (t.visits || 0);
-                let color = "#ff4b5c"; 
-                if(effort > 2) color = "#00ff88"; else if(effort > 0) color = "#ffd700"; 
-                return `
-                <div class="target-card">
-                    <span class="target-name">${t.fullName}</span>
-                    <span class="target-meta">📍 ${t.hostel || 'No Addr'}</span>
-                    <span class="effort-badge">Calls: ${t.calls||0} | Visits: ${t.visits||0}</span>
-                    <div class="probability-dot" style="background:${color}; box-shadow:0 0 5px ${color}"></div>
-                </div>`;
-            }).join('');
-
-            fullHtml += `
-                <div class="leader-section">
-                    <div class="leader-header">👤 ${leaderName} (${targets.length})</div>
-                    <div class="target-grid">
-                        ${cardsHtml}
-                    </div>
-                </div>
-            `;
-        });
-
-        container.innerHTML = fullHtml;
+            return `
+            <tr>
+                <td>
+                    <b>${row.name}</b><br>
+                    <span class="role-badge" style="color:${row.role==='member'?'var(--primary)':'var(--gold)'}">${row.role.toUpperCase()}</span>
+                </td>
+                <td>${row.contact}<br><span style="opacity:0.5; font-size:0.75rem;">${row.hostel}</span></td>
+                <td>${shepName}</td>
+                <td>${pastName}</td>
+                <td><span class="status-pill ${pillClass}">${row.status}</span></td>
+                <td style="font-size:0.75rem; opacity:0.6;">${row.note || "-"}</td>
+            </tr>`;
+        }).join('');
     }
 
-    // --- ANALYTICS (With Fail-Safe) ---
-    window.updateTimeframe = () => {
-        const filterVal = document.getElementById('timeFilter').value;
-        const endOfToday = new Date(); endOfToday.setHours(23,59,59,999);
+    function updateKPIs(data) {
+        const total = data.length;
+        const present = data.filter(d => d.status === 'present').length;
+        const absent = data.filter(d => d.status === 'absent').length;
+        const expected = total - present - absent; // Those still pending
+
+        document.getElementById('valExpected').innerText = total;
+        document.getElementById('valPresent').innerText = present;
+        document.getElementById('valAbsent').innerText = `${absent} / ${expected}`;
         
-        // 1. Try to find strictly past events
-        let pastEvents = GLOBAL_EVENTS.filter(e => e.jsDate <= endOfToday);
+        const perf = total > 0 ? Math.round((present / total) * 100) : 0;
+        document.getElementById('valPerf').innerText = perf + "%";
+    }
 
-        // FAIL-SAFE: If no "past" events found (maybe timezone or date issues), use ALL events.
-        // This ensures the graph never stays blank.
-        if (pastEvents.length === 0) pastEvents = GLOBAL_EVENTS;
+    // --- FILTER LOGIC (Global Scope) ---
+    window.filterTable = () => {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const statFilter = document.getElementById('statusFilter').value;
+        const roleFilter = document.getElementById('roleFilter').value;
 
-        if (pastEvents.length === 0) { 
-            document.getElementById('eventLabel').innerText = "Waiting for first service..."; 
-            return; 
-        }
+        const filtered = MASTER_LIST.filter(item => {
+            // Search Text
+            const textMatch = 
+                item.name.toLowerCase().includes(search) || 
+                (PHONEBOOK[item.shepherdId]||"").toLowerCase().includes(search) ||
+                item.hostel.toLowerCase().includes(search);
+            
+            if (!textMatch) return false;
 
-        let eventsToRender = [];
-        if (filterVal === 'auto') {
-            // Auto = Absolute last 5 events we have
-            eventsToRender = pastEvents.slice(-5);
-        } else {
-            const cutoffDate = new Date();
-            if(filterVal === 'week') cutoffDate.setDate(cutoffDate.getDate() - 7);
-            else cutoffDate.setMonth(cutoffDate.getMonth() - parseInt(filterVal));
-            cutoffDate.setHours(0,0,0,0);
-            eventsToRender = pastEvents.filter(e => e.jsDate >= cutoffDate);
-        }
+            // Status Filter
+            if (statFilter !== 'all' && item.status !== statFilter) return false;
 
-        // Double check we have something to show
-        if (eventsToRender.length === 0) eventsToRender = pastEvents.slice(-5);
+            // Role Filter
+            if (roleFilter !== 'all' && item.role !== roleFilter) return false;
 
-        const latestEvent = eventsToRender[eventsToRender.length - 1];
-        document.getElementById('eventLabel').innerText = `Focus: ${latestEvent.title} • ${latestEvent.jsDate.toLocaleDateString()}`;
-        
-        calculateStats(eventsToRender, latestEvent);
+            return true;
+        });
+
+        renderTable(filtered);
     };
-
-    function calculateStats(events, latestEvent) {
-        let graphLabels = [], graphExpected = [], graphActual = [], allNotes = [], latestRegistry = [];
-
-        events.forEach(evt => {
-            const eDate = evt.jsDate;
-            const dayStart = new Date(eDate); dayStart.setHours(0,0,0,0);
-            const dayEnd = new Date(eDate); dayEnd.setHours(23,59,59,999);
-            graphLabels.push(eDate.toLocaleDateString(undefined, {month:'short', day:'numeric'}));
-
-            let activeInvitees = 0;
-            GLOBAL_INV.forEach(inv => { if ((inv.lastUpdated ? inv.lastUpdated.toDate() : new Date(0)) <= dayEnd) activeInvitees++; });
-            let expectedCount = GLOBAL_MEM.length + activeInvitees;
-
-            let presentCount = 0;
-            GLOBAL_ATT.forEach(d => {
-                const t = d.timestamp ? d.timestamp.toDate() : new Date(d.date || 0);
-                if(t >= dayStart && t <= dayEnd && d.status && d.status.toLowerCase().includes('present')) presentCount++;
-            });
-            GLOBAL_INV.forEach(inv => {
-                const lastUp = inv.lastUpdated ? inv.lastUpdated.toDate() : new Date(0);
-                const isFresh = lastUp > dayStart && lastUp < dayEnd;
-                if((isFresh && inv.status === 'honoured') || (inv.history && inv.history.some(h => {
-                       const hDate = h.period.toDate(); return hDate >= dayStart && hDate <= dayEnd && h.status === 'honoured';
-                   }))) presentCount++;
-            });
-            if(expectedCount===0) expectedCount=presentCount;
-            graphExpected.push(expectedCount); graphActual.push(presentCount);
-        });
-
-        const startDay = new Date(latestEvent.jsDate); startDay.setHours(0,0,0,0);
-        const endDay = new Date(latestEvent.jsDate); endDay.setHours(23,59,59,999);
-        let attMap = {};
-        GLOBAL_ATT.forEach(d => {
-            const t = d.timestamp ? d.timestamp.toDate() : new Date(d.date||0);
-            if(t >= startDay && t <= endDay) attMap[d.memberId || d.id.split('_')[0]] = d;
-        });
-
-        GLOBAL_MEM.forEach(m => {
-            const rec = attMap[m.id];
-            let name = m.full_name || `${m.first_name||''} ${m.last_name||''}`.trim() || "Unknown";
-            const isPresent = rec && rec.status && rec.status.toLowerCase().includes('present');
-            const note = (rec && rec.notes) ? rec.notes : "";
-            if(note && !isPresent) allNotes.push({name, note, type:'Member'});
-            latestRegistry.push({name, type:'member', present:isPresent, effort:"—", note:isPresent?"":(note||"Absent")});
-        });
-
-        GLOBAL_INV.forEach(i => {
-            if(i.status === 'graduated') return;
-            const name = i.fullName || "Unknown";
-            const isPresent = i.status === 'honoured';
-            const note = i.notes || "";
-            if(note && !isPresent) allNotes.push({name, note, type:'Invitee'});
-            latestRegistry.push({name, type:'invitee', present:isPresent, effort:`📞${i.calls||0}|🏠${i.visits||0}`, note:isPresent?"":(note||"No Report")});
-        });
-
-        renderUI(graphLabels, graphExpected, graphActual, allNotes, latestRegistry);
-    }
-
-    function renderUI(labels, expected, actual, notes, registry) {
-        const ctx = document.getElementById('trendChart');
-        const chartStatus = Chart.getChart("trendChart"); 
-        if (chartStatus != undefined) chartStatus.destroy();
-        new Chart(ctx.getContext('2d'), { type: 'line', data: { labels, datasets: [{ label: 'Expected', data: expected, borderColor: '#4facfe', backgroundColor: 'rgba(79, 172, 254, 0.1)', fill: true, tension: 0.4 }, { label: 'Actual', data: actual, borderColor: '#00ff88', backgroundColor: 'rgba(0, 255, 136, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: 'white' } } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#ccc' }, beginAtZero: true }, x: { display: false } } } });
-
-        const avgExp = Math.round(expected.reduce((a,b)=>a+b,0)/(expected.length||1));
-        const avgAct = Math.round(actual.reduce((a,b)=>a+b,0)/(actual.length||1));
-        document.getElementById('avgExpected').innerText = avgExp;
-        document.getElementById('avgActual').innerText = avgAct;
-        document.getElementById('retentionRate').innerText = avgExp>0 ? Math.round((avgAct/avgExp)*100)+"%" : "0%";
-
-        document.getElementById('notesArea').innerHTML = notes.length ? notes.map(n => `<div class="note-item"><span class="note-text">"${n.note}"</span><span class="note-author">${n.name} (${n.type})</span></div>`).join('') : "<p style='text-align:center; opacity:0.5; padding:20px;'>No challenges.</p>";
-        document.getElementById('registryBody').innerHTML = registry.length ? registry.map(r => `<tr><td><b>${r.name}</b><br><span class="badge badge-${r.type}">${r.type}</span></td><td><span style="font-family:monospace; font-size:0.8rem; background:rgba(255,255,255,0.05); padding:3px 6px; border-radius:4px;">${r.effort}</span></td><td><div class="status-pill ${r.present?'pill-present':'pill-absent'}"><span class="status-dot"></span>${r.present?'PRESENT':'ABSENT'}</div></td><td><span style="font-size:0.8rem; color:${r.present?'#ccc':'#ffcccb'}; font-style:${r.present?'normal':'italic'}">${r.note}</span></td></tr>`).join('') : `<tr><td colspan="4" style="text-align:center;">No Data</td></tr>`;
-    }
 </script>
 </body>
 </html>
