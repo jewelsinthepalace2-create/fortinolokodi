@@ -306,17 +306,16 @@
                 getDocs(collection(db, "events"))
             ]);
 
-            // 2. PROCESS EVENTS (THE FIX)
-            // We need a list of "Valid Service Dates" that have already happened.
+            // 2. PROCESS EVENTS
             const now = new Date();
             const validServiceDates = []; // Format: YYYY-MM-DD
-            const eventIdToDateMap = {};
+            const eventIdToDateMap = {}; // Stores { eventId: dateString }
 
             eSnap.forEach(d => {
                 const data = d.data();
                 const title = (data.title || data.name || "").toLowerCase();
                 
-                // FILTER 1: Exclude Dawn Prayers from Statistics
+                // FILTER 1: Exclude Dawn Prayers
                 if (title.includes("dawn prayer")) return;
 
                 // FILTER 2: Check precise time (Is it in the past?)
@@ -326,33 +325,31 @@
                     // Use dateString helper if available, else derive from timestamp
                     const dateStr = data.dateString || evDate.toISOString().split('T')[0];
                     validServiceDates.push(dateStr);
-                    eventIdToDateMap(d.id, dateStr);
+                    
+                    // Populate Map correctly
+                    eventIdToDateMap[d.id] = dateStr; 
                 }
             });
-            
-            // Helper to map ID to Date safely
-            function eventIdToDateMap(id, dateStr) {
-                // We store this mainly if we need to look up attendance by ID later
-                // For this audit, we mostly rely on date strings to aggregate stats
-            }
             
             validServiceDates.sort(); // Ensure chronological order
 
             // 3. PROCESS ATTENDANCE
-            // We need a fast lookup: "Did Member X attend on Date Y?"
             const attendanceLog = {}; // Key: "memberID_dateString" -> Value: true
 
             aSnap.forEach(d => {
                 const data = d.data();
-                // We need to find the date of this attendance record
                 let dateStr = null;
                 
+                // Resolve Date
                 if (data.dateString) {
                     dateStr = data.dateString;
                 } else if (data.timestamp) {
                     dateStr = data.timestamp.toDate().toISOString().split('T')[0];
                 } else if (data.date) {
                     dateStr = new Date(data.date).toISOString().split('T')[0];
+                } else if (data.eventId && eventIdToDateMap[data.eventId]) {
+                    // FALLBACK: Use map if record has ID but no date
+                    dateStr = eventIdToDateMap[data.eventId];
                 }
 
                 // If status is present, mark it
@@ -365,7 +362,7 @@
             const allMembers = [];
             mSnap.forEach(d => allMembers.push({ id: d.id, ...d.data() }));
             
-            // 5. GROUP BY HIERARCHY (Senior Pastor Roll-Up)
+            // 5. GROUP BY HIERARCHY
             const seniorBuckets = {};
 
             // A. Identify Roots (Senior Pastors)
@@ -374,7 +371,6 @@
             mAdminSnap.forEach(d => allLeaders.push({ id: d.id, ...d.data() }));
 
             allLeaders.forEach(leader => {
-                // If no pastorId, they are a Senior Pastor
                 if (!leader.pastorId) {
                     seniorBuckets[leader.id] = {
                         name: leader.full_name,
@@ -393,7 +389,6 @@
                         seniorBuckets[bossId].teamIds.push(leader.id);
                         seniorBuckets[bossId].juniorCount++;
                     } else {
-                        // Orphan (shouldn't happen often, but treat as independent)
                         seniorBuckets[leader.id] = {
                             name: leader.full_name,
                             chapel: leader.chapel_name || "Unassigned",
@@ -408,7 +403,6 @@
             globalAuditData = Object.keys(seniorBuckets).map(seniorId => {
                 const bucket = seniorBuckets[seniorId];
                 
-                // Get all members under this entire tree
                 const teamMembers = allMembers.filter(m => bucket.teamIds.includes(m.pastorId));
 
                 if (teamMembers.length === 0) {
@@ -426,15 +420,12 @@
                 const todayTime = new Date();
 
                 teamMembers.forEach(m => {
-                    // Registration Date
                     const regDate = m.registration_date ? new Date(m.registration_date) : new Date("2024-01-01");
                     const regDateStr = regDate.toISOString().split('T')[0];
 
-                    // Determine how many "Valid Services" occurred SINCE they joined
                     const expectedServices = validServiceDates.filter(d => d >= regDateStr);
                     const possibleCount = expectedServices.length;
 
-                    // Count how many they attended
                     let attendedCount = 0;
                     expectedServices.forEach(dateStr => {
                         if (attendanceLog[`${m.id}_${dateStr}`]) attendedCount++;
@@ -446,7 +437,6 @@
                         scoredCount++;
                     }
 
-                    // Conversion Logic (Joined > 30 days ago)
                     const daysIn = (todayTime - regDate) / (1000 * 60 * 60 * 24);
                     if (daysIn > 30) {
                         eligibleConv++;
