@@ -6,46 +6,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); --green: #00ff88; --red: #ff4b5c; }
+        :root { --primary: #4facfe; --bg: #0f172a; --glass: rgba(255, 255, 255, 0.05); --border: rgba(255, 255, 255, 0.1); --green: #00ff88; --red: #ff4b5c; --gold: #ffd700; }
         body { background: var(--bg); color: white; font-family: 'Poppins', sans-serif; padding: 20px; padding-bottom: 80px; }
         .container { max-width: 600px; margin: 0 auto; }
         
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         h1 { margin: 0; font-size: 1.5rem; }
+
+        /* EVENT SECTION CONTAINER */
+        .event-section {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
         
-        /* EVENT BANNER */
-        .event-banner {
-            background: rgba(79, 172, 254, 0.1); border: 1px solid var(--primary);
-            color: var(--primary); padding: 10px; border-radius: 12px;
-            text-align: center; margin-bottom: 20px; font-size: 0.9rem; font-weight: 600;
+        .event-header {
+            background: linear-gradient(90deg, rgba(79, 172, 254, 0.15), rgba(0, 242, 254, 0.15)); 
+            padding: 15px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .ev-title { font-weight: 700; color: var(--primary); font-size: 1rem; }
+        .ev-date { font-size: 0.8rem; opacity: 0.7; font-family: monospace; }
+        .ev-badge { background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
+
+        .list-container { padding: 15px; }
+
+        /* LOCKED STATE */
+        .locked-banner {
+            border: 1px solid var(--gold); background: rgba(255, 215, 0, 0.05);
+            padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 20px;
         }
 
-        .card { background: var(--glass); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 20px; backdrop-filter: blur(10px); }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border); box-sizing: border-box; font-family: inherit; font-size: 0.9rem; outline: none; margin-bottom: 10px; }
-        input:focus { border-color: var(--primary); }
+        /* INVITEE ITEM */
+        .invitee-item { background: #1e293b; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+        .invitee-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        
+        .btn-action { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
+        .btn-present { background: rgba(0, 255, 136, 0.15); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.3); margin-left: 5px; }
+        .btn-absent { background: rgba(255, 75, 92, 0.15); color: var(--red); border: 1px solid rgba(255, 75, 92, 0.3); margin-right: 5px; }
 
-        .invitee-item { background: #1e293b; border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+        /* ADD FORM */
+        .add-card { background: var(--glass); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border); box-sizing: border-box; outline: none; margin-bottom: 10px; }
         
-        .effort-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .effort-box { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; text-align: center; }
-        .effort-label { font-size: 0.65rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 1px; display: block; margin-bottom: 5px; }
-        .counter-controls { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; }
-        .btn-count { background: var(--primary); color: #0f172a; border: none; width: 32px; height: 32px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .count-val { font-size: 1.2rem; font-weight: 600; }
-
-        .action-row { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-action { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
-        .btn-present { background: rgba(0, 255, 136, 0.1); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.3); }
-        .btn-absent { background: rgba(255, 75, 92, 0.1); color: var(--red); border: 1px solid rgba(255, 75, 92, 0.3); }
-        
-        .top-controls { display: flex; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .btn-promote { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 4px 12px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: bold; }
-        .btn-delete { background: none; border: 1px solid var(--red); color: var(--red); padding: 4px 12px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; opacity: 0.7; transition: 0.2s; }
-        
-        .reason-box { display: none; margin-top: 15px; background: rgba(255, 75, 92, 0.05); padding: 15px; border-radius: 12px; border: 1px solid rgba(255, 75, 92, 0.3); }
-        
-        #promoModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.95); z-index:1000; padding:20px; box-sizing:border-box; overflow-y: auto; }
-        .modal-content { max-width:500px; margin:20px auto; background: #1e293b; border: 1px solid var(--primary); padding: 25px; border-radius: 20px; }
+        /* MODAL */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.95); z-index:1000; padding:20px; box-sizing:border-box; overflow-y: auto; }
+        .modal-content { max-width:400px; margin:50px auto; background: #1e293b; border: 1px solid var(--border); padding: 25px; border-radius: 20px; }
+        .counter-wrapper { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .counter-btn { width: 35px; height: 35px; border-radius: 8px; border: none; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -54,16 +64,12 @@
     <div class="header-flex">
         <div>
             <h1>Invitee Mandate</h1>
-            <p id="roleDisplay" style="opacity:0.6; font-size: 0.8rem; margin-top:5px;">Identifying Role...</p>
+            <p id="roleDisplay" style="opacity:0.6; font-size: 0.8rem; margin-top:5px;">Connecting...</p>
         </div>
         <a id="dashLink" href="#" style="color:var(--primary); text-decoration:none; border:1px solid var(--primary); padding:6px 14px; border-radius:8px; font-size:0.8rem;">Dashboard</a>
     </div>
 
-    <div id="eventBanner" class="event-banner">
-        Finding next service...
-    </div>
-
-    <div class="card">
+    <div class="add-card">
         <h3 style="margin:0 0 15px 0; color:var(--primary); font-size:1rem;">Target New Soul</h3>
         <input type="text" id="invName" placeholder="Full Name">
         <div style="display:flex; gap:10px;">
@@ -73,42 +79,60 @@
         <button onclick="addInvitee()" style="width:100%; padding:14px; background:var(--primary); border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-top:5px;">+ Add to Watchlist</button>
     </div>
 
-    <div id="listArea">
-        <p style="text-align:center; opacity:0.5; padding:40px;">Syncing with database...</p>
+    <div id="eventsArea">
+        <p style="text-align:center; opacity:0.5; padding:20px;">Scanning schedule for next 48 hours...</p>
     </div>
 </div>
 
-<div id="promoModal">
+<div id="reportModal" class="modal">
     <div class="modal-content">
-        <h2 style="color:var(--primary); margin-top:0;">Soul Conversion</h2>
-        <p style="font-size:0.8rem; opacity:0.7; margin-bottom: 20px;">Move this soul to the permanent Member Database.</p>
-        <input type="hidden" id="promoId">
+        <h2 style="margin-top:0;">Submit Report</h2>
+        <p style="font-size:0.8rem; opacity:0.7;">Event: <span id="reportEventName" style="color:var(--primary); font-weight:bold;"></span></p>
+        <p style="font-size:0.9rem; font-weight:bold; margin-bottom:20px;">Target: <span id="reportTargetName"></span></p>
         
-        <div style="display:flex; gap:10px;">
-            <input type="text" id="promoFirstname" placeholder="First Name">
-            <input type="text" id="promoSurname" placeholder="Surname">
+        <input type="hidden" id="reportId">
+        <input type="hidden" id="reportEventId">
+        <input type="hidden" id="reportEventDate">
+        <input type="hidden" id="reportStatus">
+
+        <div id="reasonSection" style="display:none; margin-bottom:15px;">
+            <label style="color:var(--red); font-size:0.7rem; font-weight:bold;">REASON FOR ABSENCE</label>
+            <input type="text" id="reportReason" placeholder="Required..." style="border-color:var(--red);">
         </div>
-        <div style="display:flex; gap:10px;">
-            <select id="promoGender"><option value="Male">Male</option><option value="Female">Female</option></select>
-            <input type="date" id="promoBirthday">
+
+        <label style="font-size:0.7rem; opacity:0.6;">EFFORT MADE</label>
+        <div class="counter-wrapper">
+            <span>📞 Calls</span>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button class="counter-btn" style="background:var(--red); color:white;" onclick="adj('reportCalls', -1)">-</button>
+                <span id="reportCalls" style="font-weight:bold; font-size:1.2rem;">0</span>
+                <button class="counter-btn" style="background:var(--green); color:black;" onclick="adj('reportCalls', 1)">+</button>
+            </div>
         </div>
-        <select id="promoLevel">
-            <option value="Level 100">Level 100</option>
-            <option value="Level 200">Level 200</option>
-            <option value="Level 300">Level 300</option>
-            <option value="Level 400">Level 400</option>
-            <option value="Level 500">Level 500</option>
-            <option value="Level 600">Level 600</option>
-            <option value="Non-Student">Non-Student</option>
-        </select>
-        <input type="text" id="promoCourse" placeholder="Course">
-        <input type="text" id="promoEmergencyName" placeholder="Guardian Name">
-        <input type="tel" id="promoEmergencyPhone" placeholder="Guardian Phone">
+        <div class="counter-wrapper">
+            <span>🏠 Visits</span>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <button class="counter-btn" style="background:var(--red); color:white;" onclick="adj('reportVisits', -1)">-</button>
+                <span id="reportVisits" style="font-weight:bold; font-size:1.2rem;">0</span>
+                <button class="counter-btn" style="background:var(--green); color:black;" onclick="adj('reportVisits', 1)">+</button>
+            </div>
+        </div>
 
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button onclick="document.getElementById('promoModal').style.display='none'" style="flex:1; padding:12px; background:transparent; border:1px solid var(--border); color:white; border-radius:10px;">Cancel</button>
-            <button id="promoSaveBtn" onclick="finalSubmitPromotion()" style="flex:2; padding:12px; background:var(--green); border:none; color:#0f172a; font-weight:bold; border-radius:10px;">Confirm Membership</button>
+            <button onclick="document.getElementById('reportModal').style.display='none'" style="flex:1; padding:12px; background:transparent; border:1px solid var(--border); color:white; border-radius:10px;">Cancel</button>
+            <button onclick="submitReport()" style="flex:2; padding:12px; background:var(--primary); border:none; color:black; font-weight:bold; border-radius:10px;">Submit</button>
         </div>
+    </div>
+</div>
+
+<div id="promoModal" class="modal">
+    <div class="modal-content">
+        <h2 style="color:var(--primary); margin-top:0;">Promote to Member</h2>
+        <input type="hidden" id="promoId">
+        <input type="text" id="promoFirstname" placeholder="First Name"><br>
+        <input type="text" id="promoSurname" placeholder="Surname"><br>
+        <button onclick="finalSubmitPromotion()" style="width:100%; padding:12px; background:var(--green); border:none; color:black; font-weight:bold; border-radius:10px; margin-top:10px;">Confirm</button>
+        <button onclick="document.getElementById('promoModal').style.display='none'" style="width:100%; padding:12px; background:transparent; border:none; color:white; margin-top:5px;">Cancel</button>
     </div>
 </div>
 
@@ -124,280 +148,252 @@
     
     let currentUser = null;
     let myRole = null; 
-    let myPastorId = null; 
+    let ACTIVE_EVENTS = []; // Can hold multiple overlapping events
 
     onAuthStateChanged(auth, async (user) => {
         if(user) { 
             currentUser = user; 
             await determineRole(user.uid);
-            fetchNextEvent(); 
+            await fetchActiveEvents(); 
             loadInvitees(); 
         } else { location.href = "index.html"; }
     });
 
-    // --- SMART EVENT FETCH (Filters out Dawn Prayers) ---
-    async function fetchNextEvent() {
-        const todayStr = new Date().toISOString().split('T')[0];
+    // --- 1. FETCH EVENTS (Looking 48 Hours Ahead) ---
+    async function fetchActiveEvents() {
+        const now = new Date();
+        const future48h = new Date(now.getTime() + (48 * 60 * 60 * 1000)); // 48 Hour Window
+
         try {
-            // Fetch next 10 events to find the first valid one
+            // Get events happening between Now and 48 Hours from now
             const q = query(
                 collection(db, "events"), 
-                where("date", ">=", todayStr),
-                orderBy("date", "asc"),
-                limit(10)
+                where("date", ">=", now),
+                where("date", "<=", future48h),
+                orderBy("date", "asc")
             );
             
             const snap = await getDocs(q);
-            const banner = document.getElementById('eventBanner');
-            
-            if (!snap.empty) {
-                // Find first event that is NOT 'Dawn Prayers'
-                const validEvent = snap.docs.find(d => {
-                    const data = d.data();
-                    const title = (data.name || data.title || "").toLowerCase();
-                    return !title.includes("dawn prayer");
-                });
+            ACTIVE_EVENTS = [];
 
-                if (validEvent) {
-                    const evt = validEvent.data();
-                    const d = evt.date && evt.date.toDate ? evt.date.toDate() : new Date(evt.date);
-                    const eventName = evt.name || evt.title || "Upcoming Service";
-                    banner.innerText = `🎯 Target: ${eventName} (${d.toLocaleDateString()})`;
-                } else {
-                    // Fallback if all 10 were dawn prayers
-                    banner.innerText = "Target: Upcoming Sunday Service";
+            snap.forEach(d => {
+                const data = d.data();
+                const title = (data.title || data.name || "").toLowerCase();
+                if (!title.includes("dawn prayer")) {
+                    ACTIVE_EVENTS.push({
+                        id: d.id,
+                        title: data.title || data.name,
+                        date: data.date.toDate()
+                    });
                 }
-            } else {
-                banner.innerText = "No upcoming service scheduled.";
+            });
+
+            // If no events in 48h, grab the single next one just to show "Locked" status
+            if (ACTIVE_EVENTS.length === 0) {
+                const nextQ = query(collection(db, "events"), where("date", ">=", now), orderBy("date", "asc"), limit(1));
+                const nextSnap = await getDocs(nextQ);
+                if(!nextSnap.empty) {
+                    const d = nextSnap.docs[0];
+                    const data = d.data();
+                    if (!data.name.toLowerCase().includes("dawn prayer")) {
+                        ACTIVE_EVENTS.push({ 
+                            id: d.id, 
+                            title: data.title || data.name, 
+                            date: data.date.toDate(),
+                            isLocked: true // Mark as locked
+                        });
+                    }
+                }
             }
-        } catch(e) {
-            console.log("Event fetch error:", e);
-            document.getElementById('eventBanner').innerText = "Target: Upcoming Sunday Service";
+
+        } catch(e) { console.error(e); }
+    }
+
+    // --- 2. LOAD LISTS (Loops through Active Events) ---
+    async function loadInvitees() {
+        const mainArea = document.getElementById('eventsArea');
+        mainArea.innerHTML = "";
+
+        if(ACTIVE_EVENTS.length === 0) {
+            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No upcoming service found.</p>";
+            return;
+        }
+
+        // Fetch Invitees Once
+        let q;
+        if(myRole === 'shepherd') q = query(collection(db, "invitees"), where("shepherdId", "==", currentUser.uid));
+        else q = query(collection(db, "invitees"), where("pastorId", "==", currentUser.uid));
+        const invSnap = await getDocs(q);
+        const allInvitees = invSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(d => d.status !== 'graduated');
+
+        if(allInvitees.length === 0) {
+            mainArea.innerHTML = "<p style='text-align:center; padding:30px; opacity:0.5'>No invitees in your list.</p>";
+            return;
+        }
+
+        // RENDER EACH EVENT SECTION
+        ACTIVE_EVENTS.forEach(evt => {
+            if (evt.isLocked) {
+                // RENDER LOCKED BANNER
+                const timeDiff = evt.date - new Date();
+                const hours = Math.floor(timeDiff / 3600000);
+                mainArea.innerHTML += `
+                    <div class="locked-banner">
+                        <h2 style="margin:0; color:var(--gold)">🔒 ${evt.title}</h2>
+                        <p style="opacity:0.7; margin:5px 0;">Mandate Locked</p>
+                        <span style="font-size:0.8rem; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px;">Opens in approx ${hours-48 > 0 ? hours-48 : 0} hours</span>
+                    </div>`;
+                return;
+            }
+
+            // FILTER INVITEES FOR THIS SPECIFIC EVENT
+            // Check history array if 'eventId' exists
+            const pendingInvitees = allInvitees.filter(inv => {
+                if (!inv.history) return true;
+                // If history contains this Event ID, filter it OUT (already reported)
+                const alreadyReported = inv.history.some(h => h.eventId === evt.id);
+                return !alreadyReported;
+            });
+
+            if (pendingInvitees.length === 0) return; // Don't show empty sections
+
+            // RENDER ACTIVE SECTION
+            const dateStr = evt.date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
+            
+            let itemsHtml = pendingInvitees.map(inv => `
+                <div class="invitee-item">
+                    <div class="invitee-top">
+                        <div>
+                            <span style="font-weight:bold; font-size:1rem;">${inv.fullName}</span><br>
+                            <span style="font-size:0.8rem; opacity:0.6;">${inv.phone}</span>
+                        </div>
+                        <button onclick="deleteInvitee('${inv.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <button class="btn-action btn-absent" onclick="openReport('${inv.id}', '${inv.fullName}', '${evt.id}', '${evt.title}', '${evt.date}', 'absent')">ABSENT</button>
+                        <button class="btn-action btn-present" onclick="openReport('${inv.id}', '${inv.fullName}', '${evt.id}', '${evt.title}', '${evt.date}', 'present')">PRESENT</button>
+                    </div>
+                    <div style="text-align:center; margin-top:8px;">
+                        <button onclick="openPromo('${inv.id}')" style="background:none; border:none; color:var(--primary); font-size:0.65rem; cursor:pointer; text-decoration:underline;">Promote to Member</button>
+                    </div>
+                </div>
+            `).join('');
+
+            mainArea.innerHTML += `
+                <div class="event-section">
+                    <div class="event-header">
+                        <div>
+                            <span class="ev-title">${evt.title}</span><br>
+                            <span class="ev-date">${dateStr}</span>
+                        </div>
+                        <span class="ev-badge">${pendingInvitees.length} Pending</span>
+                    </div>
+                    <div class="list-container">
+                        ${itemsHtml}
+                    </div>
+                </div>
+            `;
+        });
+
+        if (mainArea.innerHTML === "") {
+            mainArea.innerHTML = "<p style='text-align:center; padding:40px; opacity:0.6;'>All reports submitted! Good job. 🎉</p>";
         }
     }
 
-    async function determineRole(uid) {
-        const link = document.getElementById('dashLink');
-        const roleText = document.getElementById('roleDisplay');
+    // --- 3. SUBMIT LOGIC (Multi-Event Aware) ---
+    window.openReport = (invId, invName, evtId, evtName, evtDate, status) => {
+        document.getElementById('reportId').value = invId;
+        document.getElementById('reportTargetName').innerText = invName;
+        document.getElementById('reportEventId').value = evtId;
+        document.getElementById('reportEventName').innerText = evtName;
+        document.getElementById('reportEventDate').value = evtDate; // stringified
+        document.getElementById('reportStatus').value = status;
+        
+        document.getElementById('reportCalls').innerText = "0";
+        document.getElementById('reportVisits').innerText = "0";
+        document.getElementById('reportReason').value = "";
+        document.getElementById('reasonSection').style.display = status === 'absent' ? 'block' : 'none';
+        
+        document.getElementById('reportModal').style.display = 'block';
+    };
 
+    window.submitReport = async () => {
+        const id = document.getElementById('reportId').value;
+        const evtId = document.getElementById('reportEventId').value;
+        const evtName = document.getElementById('reportEventName').innerText;
+        const evtDate = new Date(document.getElementById('reportEventDate').value); // Parse back
+        const status = document.getElementById('reportStatus').value;
+        
+        const calls = parseInt(document.getElementById('reportCalls').innerText);
+        const visits = parseInt(document.getElementById('reportVisits').innerText);
+        const reason = document.getElementById('reportReason').value;
+
+        if (status === 'absent' && !reason) return alert("Reason required.");
+
+        try {
+            const historyEntry = {
+                eventId: evtId,
+                eventName: evtName,
+                eventDate: evtDate,
+                status: status === 'present' ? 'honoured' : 'declined',
+                calls: calls, visits: visits, reason: reason || "N/A",
+                reportTimestamp: new Date()
+            };
+
+            await updateDoc(doc(db, "invitees", id), {
+                history: arrayUnion(historyEntry),
+                // We don't overwrite 'lastReportedEventId' anymore because 
+                // the filtering is now done via the history array check.
+                lastUpdated: serverTimestamp(),
+                calls: calls, visits: visits, // Update current stats for general view
+                status: status === 'present' ? 'honoured' : 'declined'
+            });
+
+            document.getElementById('reportModal').style.display = 'none';
+            loadInvitees(); // Refresh -> History check runs -> Item removed from THIS list
+
+        } catch(e) { alert("Error: " + e.message); }
+    };
+
+    // --- UTILS & HELPERS ---
+    window.adj = (id, val) => { const el = document.getElementById(id); let c = parseInt(el.innerText)+val; if(c<0)c=0; el.innerText=c; };
+    
+    async function determineRole(uid) {
         const aSnap = await getDoc(doc(db, "master_admin", uid));
         const pSnap = await getDoc(doc(db, "pastors", uid));
         const sSnap = await getDoc(doc(db, "shepherds", uid));
-        
-        if (aSnap.exists()) {
-            myRole = 'master_admin'; myPastorId = uid;
-            link.href = "../admin/index.html"; roleText.innerText = "Master Admin Oversight";
-        } else if (pSnap.exists()) {
-            myRole = 'pastor'; myPastorId = uid;
-            link.href = "../pastor/index.html"; roleText.innerText = "Pastor's Mandate";
-        } else if (sSnap.exists()) {
-            myRole = 'shepherd';
-            myPastorId = sSnap.data().assigned_pastor_id || sSnap.data().pastorId; 
-            link.href = "../shepherd/index.html"; roleText.innerText = "Shepherd's Watch";
-        } else {
-            link.href = "index.html"; roleText.innerText = "Unassigned User";
-        }
+        if (aSnap.exists()) { myRole = 'master_admin'; currentUser.uid = uid; } 
+        else if (pSnap.exists()) { myRole = 'pastor'; currentUser.uid = uid; } 
+        else if (sSnap.exists()) { myRole = 'shepherd'; currentUser.uid = uid; } 
     }
 
     window.addInvitee = async () => {
         const name = document.getElementById('invName').value;
         const phone = document.getElementById('invPhone').value;
         const hostel = document.getElementById('invHostel').value;
-        if(!name) return alert("Name is required");
+        if(!name) return alert("Required fields missing");
+        
+        // Find Pastor ID logic (if shepherd, find their pastor)
+        let pastorId = currentUser.uid;
+        if (myRole === 'shepherd') {
+            const sSnap = await getDoc(doc(db, "shepherds", currentUser.uid));
+            pastorId = sSnap.data().assigned_pastor_id || sSnap.data().pastorId;
+        }
 
-        const shepherdId = currentUser.uid; 
-        const pastorId = (myRole === 'master_admin' || myRole === 'pastor') ? currentUser.uid : myPastorId;
-
-        await addDoc(collection(db, "invitees"), {
-            fullName: name, phone, hostel,
-            shepherdId: shepherdId,
-            pastorId: pastorId,
-            calls: 0, visits: 0, status: 'unmarked', notes: "",
-            lastUpdated: serverTimestamp(),
-            history: [] 
-        });
+        await addDoc(collection(db, "invitees"), { fullName: name, phone, hostel, shepherdId: currentUser.uid, pastorId: pastorId, calls: 0, visits: 0, status: 'unmarked', lastUpdated: serverTimestamp(), history: [] });
         location.reload();
     };
 
-    window.deleteInvitee = async (id) => {
-        if(confirm("Are you sure you want to permanently remove this invitee?")) {
-            await deleteDoc(doc(db, "invitees", id));
-            loadInvitees();
-        }
-    };
-
-    async function loadInvitees() {
-        const listDiv = document.getElementById('listArea');
-        let q;
-        if(myRole === 'shepherd') q = query(collection(db, "invitees"), where("shepherdId", "==", currentUser.uid));
-        else q = query(collection(db, "invitees"), where("pastorId", "==", currentUser.uid));
-
-        const snap = await getDocs(q);
-        let html = "";
-        
-        const lastMonday = new Date();
-        lastMonday.setDate(lastMonday.getDate() - (lastMonday.getDay() + 6) % 7);
-        lastMonday.setHours(0,0,0,0);
-
-        if(snap.empty) {
-            listDiv.innerHTML = "<p style='text-align:center; opacity:0.5; padding:30px;'>No active invitees.</p>";
-            return;
-        }
-
-        snap.forEach(d => {
-            const data = d.data();
-            const id = d.id;
-            if(data.status === 'graduated') return;
-
-            const lastUpdate = data.lastUpdated ? data.lastUpdated.toDate() : new Date(0);
-            const isFresh = lastUpdate > lastMonday;
-
-            const dCalls = isFresh ? (data.calls || 0) : 0;
-            const dVisits = isFresh ? (data.visits || 0) : 0;
-            const dStatus = isFresh ? (data.status || 'unmarked') : 'unmarked';
-
-            const pStyle = dStatus === 'honoured' ? 'background:var(--green); color:#0f172a;' : '';
-            const aStyle = dStatus === 'declined' ? 'background:var(--red); color:white;' : '';
-
-            html += `
-            <div class="invitee-item">
-                <div class="top-controls">
-                    <button class="btn-delete" onclick="deleteInvitee('${id}')">🗑️ Remove</button>
-                    <button class="btn-promote" onclick="openPromo('${id}')">Promote 🎓</button>
-                </div>
-
-                <div style="margin-bottom:15px;">
-                    <span style="font-size:1.1rem; font-weight:600;">${data.fullName}</span><br>
-                    <span style="opacity:0.6; font-size:0.8rem;">📍 ${data.hostel || 'No Addr'} | 📱 ${data.phone}</span>
-                </div>
-                
-                <div class="effort-grid">
-                    <div class="effort-box">
-                        <span class="effort-label">CALLS</span>
-                        <div class="counter-controls">
-                            <button class="btn-count" onclick="modifyEffort('${id}', 'calls', -1, ${isFresh})">-</button>
-                            <span class="count-val" id="c-${id}">${dCalls}</span>
-                            <button class="btn-count" onclick="modifyEffort('${id}', 'calls', 1, ${isFresh})">+</button>
-                        </div>
-                    </div>
-                    <div class="effort-box">
-                        <span class="effort-label">VISITS</span>
-                        <div class="counter-controls">
-                            <button class="btn-count" onclick="modifyEffort('${id}', 'visits', -1, ${isFresh})">-</button>
-                            <span class="count-val" id="v-${id}">${dVisits}</span>
-                            <button class="btn-count" onclick="modifyEffort('${id}', 'visits', 1, ${isFresh})">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="action-row" id="btns-${id}">
-                    <button class="btn-action btn-absent" style="${aStyle}" onclick="toggleReason('${id}', true)">Did Not Come</button>
-                    <button class="btn-action btn-present" style="${pStyle}" onclick="setStatus('${id}', 'honoured', ${isFresh})">Honoured</button>
-                </div>
-
-                <div id="reason-box-${id}" class="reason-box">
-                    <label style="color:var(--red); font-size:0.7rem; font-weight:bold;">WHY DID THEY MISS CHURCH?</label>
-                    <input type="text" id="reason-${id}" placeholder="e.g. Sick, Traveled..." style="background:#0f172a; border-color:var(--red);">
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-action" style="background:rgba(255,255,255,0.1); color:white;" onclick="toggleReason('${id}', false)">Cancel</button>
-                        <button class="btn-action btn-absent" onclick="saveAbsence('${id}', ${isFresh})">Save Reason</button>
-                    </div>
-                </div>
-            </div>`;
-        });
-        listDiv.innerHTML = html;
-    }
-
-    async function handleFreshness(docRef, isFresh) {
-        if (isFresh) return;
-        const snap = await getDoc(docRef);
-        const old = snap.data();
-        const entry = {
-            period: old.lastUpdated || new Date(),
-            calls: old.calls || 0,
-            visits: old.visits || 0,
-            status: old.status || 'unmarked',
-            notes: old.notes || ""
-        };
-        await updateDoc(docRef, {
-            history: arrayUnion(entry),
-            calls: 0, visits: 0, status: 'unmarked', notes: "",
-            lastUpdated: serverTimestamp()
-        });
-    }
-
-    window.modifyEffort = async (id, field, change, isFresh) => {
-        const docRef = doc(db, "invitees", id);
-        if(!isFresh) await handleFreshness(docRef, false);
-        const snap = await getDoc(docRef); 
-        let val = (snap.data()[field] || 0) + change;
-        if(val < 0) val = 0;
-        await updateDoc(docRef, { [field]: val, lastUpdated: serverTimestamp() });
-        document.getElementById(field === 'calls' ? `c-${id}` : `v-${id}`).innerText = val;
-    };
-
-    window.setStatus = async (id, status, isFresh) => {
-        const docRef = doc(db, "invitees", id);
-        if(!isFresh) await handleFreshness(docRef, false);
-        await updateDoc(docRef, { status: status, lastUpdated: serverTimestamp() });
-        loadInvitees();
-    };
-
-    window.saveAbsence = async (id, isFresh) => {
-        const docRef = doc(db, "invitees", id);
-        if(!isFresh) await handleFreshness(docRef, false);
-        const reason = document.getElementById(`reason-${id}`).value;
-        if(!reason) return alert("Please type a reason.");
-        await updateDoc(docRef, { status: 'declined', notes: reason, lastUpdated: serverTimestamp() });
-        loadInvitees();
-    };
-
-    window.toggleReason = (id, show) => {
-        document.getElementById(`btns-${id}`).style.display = show ? 'none' : 'flex';
-        document.getElementById(`reason-box-${id}`).style.display = show ? 'block' : 'none';
-    };
-
-    window.openPromo = async (id) => {
-        const snap = await getDoc(doc(db, "invitees", id));
-        const d = snap.data();
-        const names = d.fullName.split(' ');
-        document.getElementById('promoId').value = id;
-        document.getElementById('promoFirstname').value = names[0];
-        document.getElementById('promoSurname').value = names.slice(1).join(' ');
-        document.getElementById('promoModal').style.display = 'block';
-    };
-
+    window.deleteInvitee = async (id) => { if(confirm("Delete?")) { await deleteDoc(doc(db, "invitees", id)); loadInvitees(); } };
+    window.openPromo = async (id) => { document.getElementById('promoId').value = id; document.getElementById('promoModal').style.display = 'block'; };
     window.finalSubmitPromotion = async () => {
         const id = document.getElementById('promoId').value;
-        const btn = document.getElementById('promoSaveBtn');
-        btn.disabled = true; btn.innerText = "Processing...";
         try {
-            const invSnap = await getDoc(doc(db, "invitees", id));
-            const invData = invSnap.data();
-            await addDoc(collection(db, "members"), {
-                first_name: document.getElementById('promoFirstname').value,
-                last_name: document.getElementById('promoSurname').value,
-                full_name: `${document.getElementById('promoFirstname').value} ${document.getElementById('promoSurname').value}`,
-                gender: document.getElementById('promoGender').value,
-                dob: document.getElementById('promoBirthday').value,
-                level: document.getElementById('promoLevel').value,
-                course: document.getElementById('promoCourse').value,
-                emergency_name: document.getElementById('promoEmergencyName').value,
-                emergency_phone: document.getElementById('promoEmergencyPhone').value,
-                phone: invData.phone,
-                hostel: invData.hostel,
-                status: "New Convert",
-                pastorId: invData.pastorId,
-                shepherdId: invData.shepherdId,
-                timestamp: serverTimestamp()
-            });
+            const invSnap = await getDoc(doc(db, "invitees", id)); const d = invSnap.data();
+            await addDoc(collection(db, "members"), { first_name: document.getElementById('promoFirstname').value, last_name: document.getElementById('promoSurname').value, full_name: `${document.getElementById('promoFirstname').value} ${document.getElementById('promoSurname').value}`, phone: d.phone, status: "New Convert", pastorId: d.pastorId, shepherdId: d.shepherdId, timestamp: serverTimestamp() });
             await updateDoc(doc(db, "invitees", id), { status: 'graduated' });
-            alert("Success! Member Promoted.");
-            location.reload();
-        } catch(e) {
-            alert("Error: " + e.message);
-            btn.disabled = false; btn.innerText = "Try Again";
-        }
+            alert("Promoted!"); location.reload();
+        } catch(e) { alert(e.message); }
     };
 </script>
 </body>
