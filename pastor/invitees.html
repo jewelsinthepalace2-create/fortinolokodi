@@ -12,26 +12,16 @@
         
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         h1 { margin: 0; font-size: 1.5rem; }
-
-        /* EVENT SECTION CONTAINER */
-        .event-section {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-bottom: 30px;
-            overflow: hidden;
-        }
         
-        .event-header {
-            background: linear-gradient(90deg, rgba(79, 172, 254, 0.15), rgba(0, 242, 254, 0.15)); 
-            padding: 15px; border-bottom: 1px solid var(--border);
-            display: flex; justify-content: space-between; align-items: center;
+        /* BANNER */
+        .event-banner {
+            background: linear-gradient(90deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1)); 
+            border: 1px solid var(--primary); color: white; padding: 15px; border-radius: 12px;
+            text-align: center; margin-bottom: 25px; transition: 0.3s;
         }
-        .ev-title { font-weight: 700; color: var(--primary); font-size: 1rem; }
-        .ev-date { font-size: 0.8rem; opacity: 0.7; font-family: monospace; }
-        .ev-badge { background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
-
-        .list-container { padding: 15px; }
+        .event-title { font-size: 1.1rem; font-weight: 700; color: var(--primary); display: block; }
+        .event-time { font-size: 0.85rem; opacity: 0.8; font-family: monospace; }
+        .locked-msg { color: var(--gold); font-size: 0.8rem; margin-top: 5px; font-weight: bold; }
 
         /* LOCKED STATE */
         .locked-banner {
@@ -39,21 +29,33 @@
             padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 20px;
         }
 
-        /* INVITEE ITEM */
-        .invitee-item { background: #1e293b; border: 1px solid var(--border); border-radius: 12px; padding: 15px; margin-bottom: 10px; }
-        .invitee-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        
-        .btn-action { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 0.8rem; }
-        .btn-present { background: rgba(0, 255, 136, 0.15); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.3); margin-left: 5px; }
-        .btn-absent { background: rgba(255, 75, 92, 0.15); color: var(--red); border: 1px solid rgba(255, 75, 92, 0.3); margin-right: 5px; }
+        /* EVENT SECTION */
+        .event-section { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 30px; overflow: hidden; }
+        .event-header { background: linear-gradient(90deg, rgba(79, 172, 254, 0.15), rgba(0, 242, 254, 0.15)); padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .ev-title { font-weight: 700; color: var(--primary); font-size: 1rem; }
+        .ev-date { font-size: 0.8rem; opacity: 0.7; font-family: monospace; }
+        .ev-badge { background: var(--gold); color: black; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; }
+        .list-container { padding: 15px; }
 
         /* ADD FORM */
         .add-card { background: var(--glass); padding: 20px; border-radius: 20px; border: 1px solid var(--border); margin-bottom: 30px; }
-        input, select { width: 100%; padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border); box-sizing: border-box; outline: none; margin-bottom: 10px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; background: rgba(0,0,0,0.3); color: white; border: 1px solid var(--border); box-sizing: border-box; font-family: inherit; font-size: 0.9rem; outline: none; margin-bottom: 10px; }
+        input:focus { border-color: var(--primary); }
+
+        /* INVITEE ITEM */
+        .invitee-item { background: #1e293b; border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+        .invitee-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .invitee-info h3 { margin: 0; font-size: 1.1rem; }
+        .invitee-info p { margin: 0; font-size: 0.8rem; opacity: 0.6; }
         
+        .action-row { display: flex; gap: 10px; }
+        .btn-action { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+        .btn-present { background: rgba(0, 255, 136, 0.15); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.3); }
+        .btn-absent { background: rgba(255, 75, 92, 0.15); color: var(--red); border: 1px solid rgba(255, 75, 92, 0.3); }
+
         /* MODAL */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.95); z-index:1000; padding:20px; box-sizing:border-box; overflow-y: auto; }
-        .modal-content { max-width:400px; margin:50px auto; background: #1e293b; border: 1px solid var(--border); padding: 25px; border-radius: 20px; }
+        .modal-content { max-width:400px; margin:50px auto; background: #1e293b; border: 1px solid var(--border); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .counter-wrapper { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 10px; }
         .counter-btn { width: 35px; height: 35px; border-radius: 8px; border: none; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
     </style>
@@ -64,12 +66,12 @@
     <div class="header-flex">
         <div>
             <h1>Invitee Mandate</h1>
-            <p id="roleDisplay" style="opacity:0.6; font-size: 0.8rem; margin-top:5px;">Connecting...</p>
+            <p id="roleDisplay" style="opacity:0.6; font-size: 0.8rem; margin-top:5px; color:var(--primary); font-weight:600;">Connecting...</p>
         </div>
         <a id="dashLink" href="#" style="color:var(--primary); text-decoration:none; border:1px solid var(--primary); padding:6px 14px; border-radius:8px; font-size:0.8rem;">Dashboard</a>
     </div>
 
-    <div class="add-card">
+    <div class="card">
         <h3 style="margin:0 0 15px 0; color:var(--primary); font-size:1rem;">Target New Soul</h3>
         <input type="text" id="invName" placeholder="Full Name">
         <div style="display:flex; gap:10px;">
@@ -80,7 +82,7 @@
     </div>
 
     <div id="eventsArea">
-        <p style="text-align:center; opacity:0.5; padding:20px;">Scanning schedule for next 48 hours...</p>
+        <p style="text-align:center; opacity:0.5; padding:20px;">Scanning schedule...</p>
     </div>
 </div>
 
@@ -89,7 +91,6 @@
         <h2 style="margin-top:0;">Submit Report</h2>
         <p style="font-size:0.8rem; opacity:0.7;">Event: <span id="reportEventName" style="color:var(--primary); font-weight:bold;"></span></p>
         <p style="font-size:0.9rem; font-weight:bold; margin-bottom:20px;">Target: <span id="reportTargetName"></span></p>
-        
         <input type="hidden" id="reportId">
         <input type="hidden" id="reportEventId">
         <input type="hidden" id="reportEventDate">
@@ -148,7 +149,7 @@
     
     let currentUser = null;
     let myRole = null; 
-    let ACTIVE_EVENTS = []; // Can hold multiple overlapping events
+    let ACTIVE_EVENTS = []; 
 
     onAuthStateChanged(auth, async (user) => {
         if(user) { 
@@ -159,13 +160,43 @@
         } else { location.href = "index.html"; }
     });
 
-    // --- 1. FETCH EVENTS (Looking 48 Hours Ahead) ---
+    // --- 1. DETERMINE ROLE & CHAPEL NAME ---
+    async function determineRole(uid) {
+        const link = document.getElementById('dashLink');
+        const roleText = document.getElementById('roleDisplay');
+        const aSnap = await getDoc(doc(db, "master_admin", uid));
+        const pSnap = await getDoc(doc(db, "pastors", uid));
+        const sSnap = await getDoc(doc(db, "shepherds", uid));
+        
+        if (aSnap.exists()) { 
+            myRole = 'master_admin'; 
+            link.href = "../admin/index.html"; 
+            roleText.innerText = "Global Oversight"; 
+        } 
+        else if (pSnap.exists()) { 
+            myRole = 'pastor'; 
+            link.href = "../pastor/index.html"; 
+            // Display Chapel Name or Default
+            roleText.innerText = pSnap.data().chapel_name || pSnap.data().branch_name || "Pastor's Mandate"; 
+        } 
+        else if (sSnap.exists()) { 
+            myRole = 'shepherd'; 
+            link.href = "../shepherd/index.html"; 
+            // Display Chapel Name or Default
+            roleText.innerText = sSnap.data().chapel_name || "Shepherd's Watch"; 
+        } 
+        else { 
+            link.href = "index.html"; 
+            roleText.innerText = "Guest User"; 
+        }
+    }
+
+    // --- 2. FETCH EVENTS (Looking 48 Hours Ahead) ---
     async function fetchActiveEvents() {
         const now = new Date();
-        const future48h = new Date(now.getTime() + (48 * 60 * 60 * 1000)); // 48 Hour Window
+        const future48h = new Date(now.getTime() + (48 * 60 * 60 * 1000)); 
 
         try {
-            // Get events happening between Now and 48 Hours from now
             const q = query(
                 collection(db, "events"), 
                 where("date", ">=", now),
@@ -200,16 +231,15 @@
                             id: d.id, 
                             title: data.title || data.name, 
                             date: data.date.toDate(),
-                            isLocked: true // Mark as locked
+                            isLocked: true 
                         });
                     }
                 }
             }
-
         } catch(e) { console.error(e); }
     }
 
-    // --- 2. LOAD LISTS (Loops through Active Events) ---
+    // --- 3. LOAD LISTS (Loops through Active Events) ---
     async function loadInvitees() {
         const mainArea = document.getElementById('eventsArea');
         mainArea.innerHTML = "";
@@ -223,6 +253,7 @@
         let q;
         if(myRole === 'shepherd') q = query(collection(db, "invitees"), where("shepherdId", "==", currentUser.uid));
         else q = query(collection(db, "invitees"), where("pastorId", "==", currentUser.uid));
+        
         const invSnap = await getDocs(q);
         const allInvitees = invSnap.docs.map(d => ({id:d.id, ...d.data()})).filter(d => d.status !== 'graduated');
 
@@ -234,47 +265,43 @@
         // RENDER EACH EVENT SECTION
         ACTIVE_EVENTS.forEach(evt => {
             if (evt.isLocked) {
-                // RENDER LOCKED BANNER
                 const timeDiff = evt.date - new Date();
                 const hours = Math.floor(timeDiff / 3600000);
                 mainArea.innerHTML += `
                     <div class="locked-banner">
                         <h2 style="margin:0; color:var(--gold)">🔒 ${evt.title}</h2>
                         <p style="opacity:0.7; margin:5px 0;">Mandate Locked</p>
-                        <span style="font-size:0.8rem; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px;">Opens in approx ${hours-48 > 0 ? hours-48 : 0} hours</span>
+                        <span style="font-size:0.8rem; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px;">Opens in approx ${Math.max(0, hours-48)} hours</span>
                     </div>`;
                 return;
             }
 
-            // FILTER INVITEES FOR THIS SPECIFIC EVENT
-            // Check history array if 'eventId' exists
+            // FILTER: Check history array if 'eventId' exists
             const pendingInvitees = allInvitees.filter(inv => {
                 if (!inv.history) return true;
-                // If history contains this Event ID, filter it OUT (already reported)
                 const alreadyReported = inv.history.some(h => h.eventId === evt.id);
                 return !alreadyReported;
             });
 
-            if (pendingInvitees.length === 0) return; // Don't show empty sections
+            if (pendingInvitees.length === 0) return;
 
-            // RENDER ACTIVE SECTION
             const dateStr = evt.date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
             
             let itemsHtml = pendingInvitees.map(inv => `
                 <div class="invitee-item">
-                    <div class="invitee-top">
-                        <div>
-                            <span style="font-weight:bold; font-size:1rem;">${inv.fullName}</span><br>
-                            <span style="font-size:0.8rem; opacity:0.6;">${inv.phone}</span>
+                    <div class="invitee-header">
+                        <div class="invitee-info">
+                            <h3>${inv.fullName}</h3>
+                            <p>📍 ${inv.hostel || 'No Addr'} | 📞 ${inv.phone}</p>
                         </div>
                         <button onclick="deleteInvitee('${inv.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
                     </div>
-                    <div style="display:flex; justify-content:space-between;">
+                    <div class="action-row">
                         <button class="btn-action btn-absent" onclick="openReport('${inv.id}', '${inv.fullName}', '${evt.id}', '${evt.title}', '${evt.date}', 'absent')">ABSENT</button>
                         <button class="btn-action btn-present" onclick="openReport('${inv.id}', '${inv.fullName}', '${evt.id}', '${evt.title}', '${evt.date}', 'present')">PRESENT</button>
                     </div>
                     <div style="text-align:center; margin-top:8px;">
-                        <button onclick="openPromo('${inv.id}')" style="background:none; border:none; color:var(--primary); font-size:0.65rem; cursor:pointer; text-decoration:underline;">Promote to Member</button>
+                        <button onclick="openPromo('${inv.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; cursor:pointer; text-decoration:underline;">Promote to Member 🎓</button>
                     </div>
                 </div>
             `).join('');
@@ -282,38 +309,30 @@
             mainArea.innerHTML += `
                 <div class="event-section">
                     <div class="event-header">
-                        <div>
-                            <span class="ev-title">${evt.title}</span><br>
-                            <span class="ev-date">${dateStr}</span>
-                        </div>
+                        <div><span class="ev-title">${evt.title}</span><br><span class="ev-date">${dateStr}</span></div>
                         <span class="ev-badge">${pendingInvitees.length} Pending</span>
                     </div>
-                    <div class="list-container">
-                        ${itemsHtml}
-                    </div>
-                </div>
-            `;
+                    <div class="list-container">${itemsHtml}</div>
+                </div>`;
         });
 
         if (mainArea.innerHTML === "") {
-            mainArea.innerHTML = "<p style='text-align:center; padding:40px; opacity:0.6;'>All reports submitted! Good job. 🎉</p>";
+            mainArea.innerHTML = "<p style='text-align:center; padding:40px; opacity:0.6;'>All reports submitted! 🎉</p>";
         }
     }
 
-    // --- 3. SUBMIT LOGIC (Multi-Event Aware) ---
+    // --- 4. SUBMIT LOGIC ---
     window.openReport = (invId, invName, evtId, evtName, evtDate, status) => {
         document.getElementById('reportId').value = invId;
         document.getElementById('reportTargetName').innerText = invName;
         document.getElementById('reportEventId').value = evtId;
         document.getElementById('reportEventName').innerText = evtName;
-        document.getElementById('reportEventDate').value = evtDate; // stringified
+        document.getElementById('reportEventDate').value = evtDate;
         document.getElementById('reportStatus').value = status;
-        
         document.getElementById('reportCalls').innerText = "0";
         document.getElementById('reportVisits').innerText = "0";
         document.getElementById('reportReason').value = "";
         document.getElementById('reasonSection').style.display = status === 'absent' ? 'block' : 'none';
-        
         document.getElementById('reportModal').style.display = 'block';
     };
 
@@ -321,9 +340,8 @@
         const id = document.getElementById('reportId').value;
         const evtId = document.getElementById('reportEventId').value;
         const evtName = document.getElementById('reportEventName').innerText;
-        const evtDate = new Date(document.getElementById('reportEventDate').value); // Parse back
+        const evtDate = new Date(document.getElementById('reportEventDate').value);
         const status = document.getElementById('reportStatus').value;
-        
         const calls = parseInt(document.getElementById('reportCalls').innerText);
         const visits = parseInt(document.getElementById('reportVisits').innerText);
         const reason = document.getElementById('reportReason').value;
@@ -331,49 +349,22 @@
         if (status === 'absent' && !reason) return alert("Reason required.");
 
         try {
-            const historyEntry = {
-                eventId: evtId,
-                eventName: evtName,
-                eventDate: evtDate,
-                status: status === 'present' ? 'honoured' : 'declined',
-                calls: calls, visits: visits, reason: reason || "N/A",
-                reportTimestamp: new Date()
-            };
-
+            const entry = { eventId: evtId, eventName: evtName, eventDate: evtDate, status: status === 'present' ? 'honoured' : 'declined', calls: calls, visits: visits, reason: reason || "N/A", reportTimestamp: new Date() };
             await updateDoc(doc(db, "invitees", id), {
-                history: arrayUnion(historyEntry),
-                // We don't overwrite 'lastReportedEventId' anymore because 
-                // the filtering is now done via the history array check.
-                lastUpdated: serverTimestamp(),
-                calls: calls, visits: visits, // Update current stats for general view
-                status: status === 'present' ? 'honoured' : 'declined'
+                history: arrayUnion(entry), lastUpdated: serverTimestamp(), calls: calls, visits: visits, status: status === 'present' ? 'honoured' : 'declined'
             });
-
             document.getElementById('reportModal').style.display = 'none';
-            loadInvitees(); // Refresh -> History check runs -> Item removed from THIS list
-
+            loadInvitees();
         } catch(e) { alert("Error: " + e.message); }
     };
 
-    // --- UTILS & HELPERS ---
+    // --- UTILS ---
     window.adj = (id, val) => { const el = document.getElementById(id); let c = parseInt(el.innerText)+val; if(c<0)c=0; el.innerText=c; };
     
-    async function determineRole(uid) {
-        const aSnap = await getDoc(doc(db, "master_admin", uid));
-        const pSnap = await getDoc(doc(db, "pastors", uid));
-        const sSnap = await getDoc(doc(db, "shepherds", uid));
-        if (aSnap.exists()) { myRole = 'master_admin'; currentUser.uid = uid; } 
-        else if (pSnap.exists()) { myRole = 'pastor'; currentUser.uid = uid; } 
-        else if (sSnap.exists()) { myRole = 'shepherd'; currentUser.uid = uid; } 
-    }
-
     window.addInvitee = async () => {
-        const name = document.getElementById('invName').value;
-        const phone = document.getElementById('invPhone').value;
-        const hostel = document.getElementById('invHostel').value;
+        const name = document.getElementById('invName').value; const phone = document.getElementById('invPhone').value; const hostel = document.getElementById('invHostel').value;
         if(!name) return alert("Required fields missing");
         
-        // Find Pastor ID logic (if shepherd, find their pastor)
         let pastorId = currentUser.uid;
         if (myRole === 'shepherd') {
             const sSnap = await getDoc(doc(db, "shepherds", currentUser.uid));
