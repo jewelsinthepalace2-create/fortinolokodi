@@ -123,16 +123,13 @@
 
     async function init() {
         try {
-            // 1. Build Phonebook (ID -> Name) for display
             await buildPhonebook();
 
-            // 2. Find Target Event
             const now = new Date();
             const q = query(collection(db, "events"), where("date", ">=", now), orderBy("date", "asc"), limit(10));
             const evSnap = await getDocs(q);
             
             if(!evSnap.empty) {
-                // Find first non-dawn event
                 const valid = evSnap.docs.find(d => !((d.data().title||d.data().name||"").toLowerCase().includes("dawn")));
                 if (valid) {
                     const d = valid.data();
@@ -140,7 +137,6 @@
                 }
             }
 
-            // Fallback if no future event, get the last past event (Review Mode)
             if(!TARGET_EVENT) {
                 const pastQ = query(collection(db, "events"), orderBy("date", "desc"), limit(1));
                 const pastSnap = await getDocs(pastQ);
@@ -167,7 +163,7 @@
             const snap = await getDocs(collection(db, col));
             snap.forEach(d => {
                 const data = d.data();
-                PHONEBOOK[d.id] = data.full_name || `${data.first_name||''} ${data.last_name||''}`.trim() || "Unknown";
+                PHONEBOOK[d.id] = data.full_name || `${data.first_name||''} ${data.last_name||''}`.trim() || "-";
             });
         }
     }
@@ -175,15 +171,11 @@
     async function loadMasterList() {
         MASTER_LIST = [];
 
-        // A. FETCH MEMBERS (List 1)
-        // Members are checked against the 'attendance' collection
         const memSnap = await getDocs(collection(db, "members"));
-        const attSnap = await getDocs(collection(db, "attendance")); // Get all attendance (we filter in memory for speed on small datasets)
+        const attSnap = await getDocs(collection(db, "attendance")); 
         
         memSnap.forEach(doc => {
             const m = doc.data();
-            // Check attendance for this specific event
-            // Logic: Does an attendance record exist where memberId == m.id AND eventId == TARGET_EVENT.id?
             const record = attSnap.docs.find(a => {
                 const ad = a.data();
                 return ad.memberId === doc.id && (ad.eventId === TARGET_EVENT.id || (ad.timestamp && ad.timestamp.toDate().toDateString() === TARGET_EVENT.date.toDateString()));
@@ -196,8 +188,11 @@
                 else if (s.includes('absent')) status = 'absent';
             }
 
+            // FIX: Use first_name + last_name if full_name is missing
+            const fullName = m.full_name || `${m.first_name || ''} ${m.last_name || ''}`.trim() || "Unknown Member";
+
             MASTER_LIST.push({
-                name: m.full_name,
+                name: fullName,
                 contact: m.phone || "-",
                 hostel: m.hostel || m.residence || "-",
                 role: 'member',
@@ -208,13 +203,11 @@
             });
         });
 
-        // B. FETCH INVITEES (List 2)
         const invSnap = await getDocs(collection(db, "invitees"));
         invSnap.forEach(doc => {
             const i = doc.data();
-            if(i.status === 'graduated') return; // Don't show graduated
+            if(i.status === 'graduated') return; 
 
-            // Check history for this event
             let status = 'expected';
             let note = "";
             
@@ -251,11 +244,10 @@
         }
 
         tbody.innerHTML = data.map(row => {
-            // Map IDs to Names
-            const shepName = PHONEBOOK[row.shepherdId] || "Unassigned";
+            // FIX: Use hyphen if name missing
+            const shepName = PHONEBOOK[row.shepherdId] || "-";
             const pastName = PHONEBOOK[row.pastorId] || "-";
             
-            // Status Styling
             let pillClass = "st-expected";
             if (row.status === 'present') pillClass = "st-present";
             if (row.status === 'absent') pillClass = "st-absent";
@@ -279,7 +271,7 @@
         const total = data.length;
         const present = data.filter(d => d.status === 'present').length;
         const absent = data.filter(d => d.status === 'absent').length;
-        const expected = total - present - absent; // Those still pending
+        const expected = total - present - absent; 
 
         document.getElementById('valExpected').innerText = total;
         document.getElementById('valPresent').innerText = present;
@@ -289,25 +281,19 @@
         document.getElementById('valPerf').innerText = perf + "%";
     }
 
-    // --- FILTER LOGIC (Global Scope) ---
     window.filterTable = () => {
         const search = document.getElementById('searchInput').value.toLowerCase();
         const statFilter = document.getElementById('statusFilter').value;
         const roleFilter = document.getElementById('roleFilter').value;
 
         const filtered = MASTER_LIST.filter(item => {
-            // Search Text
             const textMatch = 
                 item.name.toLowerCase().includes(search) || 
                 (PHONEBOOK[item.shepherdId]||"").toLowerCase().includes(search) ||
                 item.hostel.toLowerCase().includes(search);
             
             if (!textMatch) return false;
-
-            // Status Filter
             if (statFilter !== 'all' && item.status !== statFilter) return false;
-
-            // Role Filter
             if (roleFilter !== 'all' && item.role !== roleFilter) return false;
 
             return true;
