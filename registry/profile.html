@@ -5,7 +5,6 @@
     <title>Member Profile | ShepherdNet</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="icon" type="image/png" href="https://i.ibb.co/60bRQP5Z/Jewels-background-removed.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { 
@@ -25,8 +24,13 @@
         .stat-lab { font-size: 0.65rem; text-transform: uppercase; opacity: 0.6; }
         .chart-box { background: var(--glass); padding: 20px; border-radius: 24px; border: 1px solid var(--border); margin-bottom: 20px; }
         .history-list { background: var(--glass); padding: 20px; border-radius: 24px; border: 1px solid var(--border); }
+        
         .history-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 0; border-bottom: 1px solid var(--border); transition: 0.3s; }
         .history-item:last-child { border-bottom: none; }
+        
+        /* Highlight Active Item */
+        .history-item.active-event { border: 1px solid var(--green); background: rgba(0, 255, 136, 0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+
         .service-info { flex: 1; }
         .note-preview { font-size: 0.75rem; color: var(--primary); margin-top: 5px; font-style: italic; display: block; }
         .status-area { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
@@ -41,7 +45,7 @@
             cursor: pointer; font-size: 0.75rem; font-weight: 700; transition: 0.2s;
             background: rgba(255,255,255,0.05); color: white;
         }
-        .btn-action:disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); }
+        .btn-action:disabled { opacity: 0.2; cursor: not-allowed; filter: grayscale(1); border-color:transparent; }
         .btn-p.active { background: var(--green); color: #0f172a; border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,136,0.3); }
         .btn-a.active { background: var(--red); color: white; border-color: var(--red); box-shadow: 0 0 10px rgba(255,75,92,0.3); }
         .note-btn { background: var(--glass); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 8px; cursor: pointer; }
@@ -60,6 +64,7 @@
     <div class="profile-card">
         <img src="https://via.placeholder.com/100" class="profile-img" id="memberPic">
         <h1 id="memberName">Loading Profile...</h1>
+        <p id="memberRole" style="font-size:0.8rem; opacity:0.6; margin-top:5px;">Member</p>
     </div>
 
     <div class="filter-box">
@@ -95,18 +100,11 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = { 
-        apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc",
-        authDomain: "fob-database-139d1.firebaseapp.com",
-        projectId: "fob-database-139d1",
-        storageBucket: "fob-database-139d1.firebasestorage.app",
-        appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3"
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyCBv60eRCO0e4dFBMKGKnIATouxTuk1Bcc", authDomain: "fob-database-139d1.firebaseapp.com", projectId: "fob-database-139d1", storageBucket: "fob-database-139d1.firebasestorage.app", appId: "1:375165731354:web:b5fa57dcb2d71ee0d8c7a3" };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app, "fobrealdbase");
     const auth = getAuth(app);
@@ -125,13 +123,20 @@
         const historyDiv = document.getElementById('historyList');
 
         try {
+            // 1. Member Data
             const mSnap = await getDoc(doc(db, "members", memberId));
-            if (mSnap.exists()) document.getElementById('memberName').innerText = `${mSnap.data().first_name} ${mSnap.data().last_name}`;
+            if (mSnap.exists()) {
+                const m = mSnap.data();
+                document.getElementById('memberName').innerText = m.full_name || `${m.first_name} ${m.last_name}`;
+                document.getElementById('memberRole').innerText = m.status || "Member";
+            }
 
+            // 2. Attendance Records
             const attDocs = await getDocs(query(collection(db, "attendance"), where("memberId", "==", memberId)));
             const attendanceMap = {};
             attDocs.forEach(d => attendanceMap[d.data().eventId] = d.data());
 
+            // 3. Events List
             const eventsSnap = await getDocs(query(collection(db, "events"), orderBy("date", "asc")));
             
             let presentCount = 0;
@@ -139,50 +144,84 @@
             let listHtml = "";
 
             const now = new Date();
-            const todayGMT = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString().split('T')[0];
 
             eventsSnap.forEach(evDoc => {
                 const ev = evDoc.data();
-                const attData = attendanceMap[evDoc.id] || {};
-                const isPresent = attData.status === 'present';
-                const isAbsent = attData.status === 'absent';
-                
-                const isDue = ev.date <= todayGMT;
+                // Get accurate date object
+                const evDateObj = ev.date && ev.date.toDate ? ev.date.toDate() : new Date(ev.date);
+                const dateStr = ev.dateString || evDateObj.toISOString().split('T')[0];
+                const title = ev.title || ev.name || "Service";
 
-                // MATH: Automatically counts as a 'miss' if isDue is true and isPresent is false
-                if (isDue) {
+                // Exclude Dawn Prayers from stats
+                if (title.toLowerCase().includes("dawn prayer")) return;
+
+                const attData = attendanceMap[evDoc.id] || {};
+                const isPresent = attData.status === 'Present' || attData.status === 'present';
+                const isAbsent = attData.status === 'Absent' || attData.status === 'absent';
+                
+                // --- STRICT LOCKING LOGIC ---
+                // Lock Opens: At start time
+                // Lock Closes: At 11:59:59 PM on the day of event
+                
+                const dayEnd = new Date(evDateObj);
+                dayEnd.setHours(23, 59, 59, 999);
+
+                // Is the window currently open?
+                // It must be AFTER start time AND BEFORE day end
+                const isOpen = now >= evDateObj && now <= dayEnd;
+                
+                // Is it strictly in the past (Locked forever)?
+                const isPast = now > dayEnd;
+
+                // Stats only count if the event has technically started
+                if (now >= evDateObj) {
                     pastEventsCount++;
                     if (isPresent) presentCount++;
                 }
 
-                if (filterValue === "all" || ev.date.startsWith(filterValue)) {
+                // Render Filter
+                if (filterValue === "all" || dateStr.startsWith(filterValue)) {
                     let pillClass = "pill-neutral";
-                    let statusLabel = isDue ? "Unmarked" : "Locked 🔒";
-                    if (isPresent) { pillClass = "pill-present"; statusLabel = "Present"; }
-                    else if (isAbsent) { pillClass = "pill-absent"; statusLabel = "Absent"; }
+                    let statusLabel = "Wait..."; // Default future state
+                    let opacityStyle = "opacity:0.5";
+                    let highlightClass = "";
+
+                    if (isOpen) {
+                        statusLabel = "Mark Now ⚡";
+                        opacityStyle = "opacity:1";
+                        highlightClass = "active-event";
+                    } else if (isPast) {
+                        statusLabel = "Locked 🔒";
+                    }
+
+                    if (isPresent) { pillClass = "pill-present"; statusLabel = isOpen ? "Present" : "Present (Locked)"; }
+                    else if (isAbsent) { pillClass = "pill-absent"; statusLabel = isOpen ? "Absent" : "Absent (Locked)"; }
+
+                    // Disable buttons if NOT open (Future OR Past)
+                    const disabledAttr = !isOpen ? 'disabled' : '';
 
                     listHtml += `
-                        <div class="history-item" style="${!isDue ? 'opacity:0.4' : ''}">
+                        <div class="history-item ${highlightClass}" style="${opacityStyle}">
                             <div class="service-info">
-                                <span style="font-weight:600">${ev.name}</span><br>
-                                <small style="opacity:0.5">${ev.date}</small>
+                                <span style="font-weight:600">${title}</span><br>
+                                <small style="opacity:0.6">${evDateObj.toLocaleDateString()} @ ${evDateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
                                 ${attData.note ? `<span class="note-preview">📝 ${attData.note}</span>` : ''}
                             </div>
                             <div class="status-area">
                                 <span class="status-pill ${pillClass}">${statusLabel}</span>
                                 <div class="action-group">
                                     <button class="btn-action btn-p ${isPresent ? 'active' : ''}" 
-                                        onclick="updateStatus('${evDoc.id}', 'present')" ${!isDue ? 'disabled' : ''}>P</button>
+                                        onclick="updateStatus('${evDoc.id}', 'Present')" ${disabledAttr}>P</button>
                                     <button class="btn-action btn-a ${isAbsent ? 'active' : ''}" 
-                                        onclick="updateStatus('${evDoc.id}', 'absent')" ${!isDue ? 'disabled' : ''}>A</button>
-                                    <button class="note-btn" onclick="openNote('${evDoc.id}', '${ev.name.replace(/'/g, "\\'")}', '${(attData.note || "").replace(/'/g, "\\'")}')">💬</button>
+                                        onclick="updateStatus('${evDoc.id}', 'Absent')" ${disabledAttr}>A</button>
+                                    <button class="note-btn" onclick="openNote('${evDoc.id}', '${title.replace(/'/g, "\\'")}', '${(attData.note || "").replace(/'/g, "\\'")}')">💬</button>
                                 </div>
                             </div>
                         </div>`;
                 }
             });
 
-            historyDiv.innerHTML = listHtml || "<p style='text-align:center; opacity:0.5;'>No events scheduled.</p>";
+            historyDiv.innerHTML = listHtml || "<p style='text-align:center; opacity:0.5;'>No events found.</p>";
             document.getElementById('totalPastEvents').innerText = pastEventsCount;
             document.getElementById('attRate').innerText = `${pastEventsCount > 0 ? Math.round((presentCount / pastEventsCount) * 100) : 0}%`;
             renderChart(presentCount, pastEventsCount - presentCount);
